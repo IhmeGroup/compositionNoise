@@ -1,4 +1,8 @@
-function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMoreau(M_a, M_b, M_c, Omega, fuel, suppress, SPLINES, subsol, supsol)
+function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMoreau(M_a, M_b, M_c, Omega, suppress, SPLINY, subsol, supsol)
+
+	addpath('../core');
+	addpath('../data');
+
 %		 1 		   2       3       4    5    6    7    8    9
 %	This function drives the BVP solver for composition noise with linear velocity nozzles
 %	Inputs are 
@@ -18,31 +22,17 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %	7) w_z - composition characteristic of the solution
 
 	global data;%This is a variable used to carry the flamelet data, without it the constant-reloading of this file slows the code down substantially
-	global SPLINES;
 	global fuel;
-	if (fuel == 1) % Dodecane
-		data = load('./lowStrain/lowStrain.C12H26');
-	elseif (fuel == 2) % Methane
-		data = load('./lowStrain/lowStrain.CH4');
-	elseif (fuel == 3) % 
-		data = load('./lowStrain/lowStrain.H2');
-	end
+	data = loadFuelData(fuel);
 
-	if (~exist('SPLINES', 'var'))
-		[SPLINES] = buildBaseFlowSplines();
-	end
 	Omega
 
 	epsilon = 1E-5;%This is the value of the perturbation distance (in eta) about the nozzle throat. Small values lead toward more accuracte (but more oscillatory and solower solutions)
-	gamma = 1.4;
-	T0 = 2100.0;%
-	p0 = 1E5;
-	Zbar = 0.0627964;%stoichiometric value
 
 	N1 = 101;
 	N2 = 101;
 
-
+	[gamma, T0, p0, Zbar] = returnAmbientState();
 
 %	Boundary conditions imposed for the subsonic portion of the flow 
 %	_p = (u+c) acoustic, _m = (u-c) acoustic, _s = entropy, _z = composition
@@ -69,6 +59,14 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %			  1		2		3		4		5		6	7	8		9		10		11		12		13		14		15		16
 	global param;
 	param = [M_a; 	M_b; 	M_c;	gamma; 	Omega; 	T0;	p0;	Zbar; 	w_p_a; 	w_m_a; 	w_s_a; 	w_z_a; 	w_p_b; 	w_m_b; 	w_s_b; 	w_z_b; L];
+
+	global SPLINES;
+	if (~exist('SPLINY', 'var'))
+		[SPLINES] = buildBaseFlowSplines();
+	else
+		[SPLINES] = SPLINY;
+	end
+
 
 %	Flags to control output
 	if (suppress == true);

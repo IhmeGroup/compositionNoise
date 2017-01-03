@@ -1,7 +1,6 @@
 function[psi, gctr] = returnPsi(Tbar, pbar, Zbar)
 %	Returns the normalized chemical potential and (gibbs free energy, if desired) as a function of mean temperature, pressure, and composition
 	global data fuel;
-
 %	Load species properties
 	if (fuel == 1)
 		[Nspecies, species, a, A, MW] = speciesPropsC12H26();
@@ -18,7 +17,7 @@ function[psi, gctr] = returnPsi(Tbar, pbar, Zbar)
 
 %	Find the Z value to the right of Zbar
 	index = 1;
-	while (data(1,index+1) < Zbar)
+	while (data(1,index+1) < Zbar) %&& ((index + 1) < M) 
 		index = index + 1;
 		if (index > M)
 			break;

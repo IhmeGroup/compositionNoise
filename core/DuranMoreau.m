@@ -1,4 +1,9 @@
-function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMoreau(M_a, M_b, M_c, Omega, suppress, SPLINY, subsol, supsol)
+function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMoreau(M_a, M_b, M_c, Omega, runtype, suppress, SPLINY, subsol, supsol)
+
+%	runtype is a variable to indicate what type of response is being tested. If 
+%		runtype == 1 --> downstream acoustic wave
+%		runtype == 3 --> entropy wave
+%		runtype == 4 --> downstream acoustic wave
 
 	addpath('../core');
 	addpath('../data');
@@ -37,14 +42,19 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %	Boundary conditions imposed for the subsonic portion of the flow 
 %	_p = (u+c) acoustic, _m = (u-c) acoustic, _s = entropy, _z = composition
 %	Inf values are not called and intended to break the code in event of an error
+
 	w_p_a = 0.0;
-	w_s_a = 1.0;
 	w_m_a = Inf;
+	w_s_a = 0.0;
 	w_z_a = 0.0;
 	w_p_b = Inf;
-	w_s_b = Inf;
 	w_m_b = 0.0;
+	w_s_b = Inf;
 	w_z_b = Inf;
+	if 		(runtype == 1) w_p_a = 1;
+	elseif 	(runtype == 2) error('Imposing upstream propagating acoustic wave at the inlet!');
+	elseif 	(runtype == 3)	w_s_a = 1;
+	elseif	(runtype == 4)	w_z_a = 1; end
 
 %	common expressions
 	gm1 = gamma - 1;%gamma - 1

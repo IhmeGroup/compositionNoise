@@ -10,19 +10,14 @@ function[eta A M] = validateDuranMoreau()
 	addpath('../core');
 	addpath('../data');
 
-
-%	Flags
-	use_runway = false;
-
 %	parameters
-	gamma = 1.4;
-	R_univ = 8.31415;
 	Nomega = 51;
 	dOmega = 2/(Nomega-1);
 	global fuel data;
 	fuel = 2;
 	data = loadFuelData(fuel);
 
+%	Allocate data for efficiency
 	TRANS = zeros(3,Nomega,5);
 	PHASE = zeros(3, Nomega, 3);
 
@@ -45,9 +40,9 @@ function[eta A M] = validateDuranMoreau()
 			count = count + 1;
 			OMEGA(count) = omega;
 			if ((exist('subsol', 'var')) && (exist('supsol', 'var')))
-				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, true, SPLINES, subsol, supsol);
+				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, 3, true, SPLINES, subsol, supsol);
 			else
-				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, true, SPLINES);
+				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, 3, true, SPLINES);
 			end
 %			 1         2       3       4  5  6  7  8  9
 			TRANS(test,count,:) = [transfer(1,2), transfer(2,2), transfer(3,2), transfer(4,2), transfer(2,1)];

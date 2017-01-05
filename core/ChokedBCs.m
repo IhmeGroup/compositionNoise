@@ -1,4 +1,4 @@
-function[Res] = ChokedBCs(I_a, I_b)
+function[Res] = ChokedBCs(q_a, q_b)
 %	Computes boundary condition residual for subsonic side of choked flow
 %	
 %	Unpack param vector
@@ -31,21 +31,11 @@ function[Res] = ChokedBCs(I_a, I_b)
 	p_a = (1 + gm1o2*M_a*M_a)^(-gamma/gm1)*pbar;
 	p_b = (1 + gm1o2*M_b*M_b)^(-gamma/gm1)*pbar;
 
-	Psi_a = returnPsi(T_a, p_a, Zbar);
+%	Psi_a = returnPsi(T_a, p_a, Zbar); %Not needed
 	Psi_b = returnPsi(T_b, p_b, Zbar);
 
 	alpha_a = 1/(1+gm1o2*M_a*M_a);
 	alpha_b = 1/(1+gm1o2*M_b*M_b);
-
-	P_a = [ 	1 					  1 			   -1		   -Psi_a;
-			gm1*alpha_a 	gm1*M_a*M_a*alpha_a 	alpha_a		alpha_a*Psi_a;
-				0 					  0 			    1			0;
-				0					  0			 	    0			1];
-
-	P_b = [ 	1 				      1 			   -1		   -Psi_b;
-			gm1*alpha_b 	gm1*M_b*M_b*alpha_b 	alpha_b		alpha_b*Psi_b;
-				0 					  0 			 	1			0;
-				0					  0			 		0			1];
 
 	R_a = [	1 	M_a 	0	0;
 		   	1  -M_a 	0	0;
@@ -57,11 +47,8 @@ function[Res] = ChokedBCs(I_a, I_b)
 			0	0		1	0;
 			0	0		0	1];
 
-	s_a = P_a\I_a;
-	s_b = P_b\I_b;
-
-	w_a = R_a*s_a;
-	w_b = R_b*s_b;
+	w_a = R_a*q_a;
+	w_b = R_b*q_b;
 
 	w_m_b_num = w_b(2);
 	w_p_a_num = w_a(1);
@@ -71,6 +58,6 @@ function[Res] = ChokedBCs(I_a, I_b)
 
 	Res(1) = (w_p_a_num - w_p_a);%	(u+c) = prescribed value at the inlet
 	Res(2) = (w_s_a_num - w_s_a);%	(s) = prescirbed value at the inlet
-	Res(3) = gm1o2*s_b(1) + -M_b*s_b(2) + 0.5*s_b(3) + 0.5*Psi_b*s_b(4); % M' = 0 at the throat
+	Res(3) = gm1o2*q_b(1) + -q_b(2) + 0.5*q_b(3) + 0.5*Psi_b*q_b(4); % M' = 0 at the throat
 	Res(4) = (w_z_a_num - w_z_a);% 	(z) = prescribed value at the inlet
 end%ChokedBCs()

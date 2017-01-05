@@ -115,10 +115,6 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %		Compute the eta bounds (see appendix of Duran & Moreau) for the subsonic problem
 		etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
 
-
-
-
-
 %		Initialize the BVP, values shouldn't matter
 		if (~exist('subsol', 'var'))
 			subsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N1), [0.5 0.5 0.5 0.5]);
@@ -131,10 +127,10 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		subsol 	= bvp4c(@DuranMoreauODE, @SubsonicBCs, subsol, options);
 %		Unpack the solution
 		eta = subsol.x;		%spatial coordinate
-		I_1 = subsol.y(1,:);	%mass
-		I_2 = subsol.y(2,:);	%enthalpy
-		I_3 = subsol.y(3,:);	%entropy
-		I_4 = subsol.y(4,:);	%composition
+		p = subsol.y(1,:);	%pressure primitive
+		u = subsol.y(2,:);	%velocity primitive
+		s = subsol.y(3,:);	%entropy primitive
+		z = subsol.y(4,:);	%composition primitive
 	elseif (choked)
 		disp('The flow is choked but shock free');
 %		First pass (inlet -> throat)
@@ -155,10 +151,10 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		subsol 	= bvp4c(@DuranMoreauODE, @ChokedBCs, subsol, options);
 %		Unpack the BVP solution
 		eta = subsol.x;		%spatial coordinate
-		I_1 = subsol.y(1,:);	%mass
-		I_2 = subsol.y(2,:);	%enthalpy
-		I_3 = subsol.y(3,:);	%entropy
-		I_4 = subsol.y(4,:);	%composition
+		p = subsol.y(1,:);	%pressure primitive
+		u = subsol.y(2,:);	%velocity primitive
+		s = subsol.y(3,:);	%entropy primitive
+		z = subsol.y(4,:);	%composition primitive
 
 %		Obtain the dimensionless perturbations at the throat and store them into param		
 		alpha = 1/(1 + gm1o2*one*one);				% Common prefactor pre-computed for convenience
@@ -166,14 +162,7 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		p_t = (1 + gm1o2*one*one)^(-gamma/gm1)*p0;	%pressure at the throat
 		Psi_t = returnPsi(T_t, p_t, Zbar);			%Psi value at the throat
 
-%		The perturbation invariants are related to the normalized perturbation quantities s = [p'/gamma *p0, u'/u, sigma'/c_p, xi] by the matrix P
-		P = [  1	        1		 		 -1		  -Psi_t  ;
-			 gm1*alpha		alpha*gm1*one*one	alpha	alpha*Psi_t;
-			   0			0		  		  1			0	  ;
-			   0			0		  		  0			1     ];
-				
-		I = [I_1(end); I_2(end); I_3(end); I_4(end)];
-		s = P\I;
+		q = [p; u; s; z];
 
 %		The characteristics w = (pi^+, pi^-, sigma, xi) are related to the normalized perturbation quantities s by the matrix R
 		R = [1 	one 	0	0;
@@ -181,7 +170,9 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 			 0	0		1	0;
 			 0	0		0	1];
 
-		w = R*s;
+		one
+
+		w = R*q(:,end);
 
 %		Re-initialize the BCs for the second pass
 		w_p_a = w(1);
@@ -203,22 +194,27 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		global SPLINES;
 %		Spatial bounds
 		etabounds = [sqrt(gp1/2*one*one/(1+gm1o2*one*one)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
-%		Initializ
+%		Initialize
 		if (~exist('supsol', 'var'))
-			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [mean(I_1) mean(I_2) mean(I_3) mean(I_4)]);
+			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [mean(p) mean(u) mean(s) mean(z)]);
 		end
 		supsol 	= bvp4c(@DuranMoreauODE, @SupersonicBCs, supsol, options);
 
 %		Concatenate the subsonic and supersonic portions of the solution
 		eta = [eta, supsol.x];
-		I_1 = [I_1, supsol.y(1,:)];
-		I_2 = [I_2, supsol.y(2,:)];
-		I_3 = [I_3, supsol.y(3,:)];
-		I_4 = [I_4, supsol.y(4,:)];
+		p = [p, supsol.y(1,:)];
+		u = [u, supsol.y(2,:)];
+		s = [s, supsol.y(3,:)];
+		z = [z, supsol.y(4,:)];
 
 	elseif (shocked)
 %		Shocked solution would go here...	
 	end
+
+	I_1 = zeros(length(eta), 1);
+	I_2 = zeros(length(eta), 1);
+	I_3 = zeros(length(eta), 1);
+	I_4 = zeros(length(eta), 1);
 
 %	Now that the full solution has been obtained, unpack it for plotting
 	for i = 1:length(eta)
@@ -231,20 +227,12 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		Tee = (1 + gm1o2*M*M)^(-1)*T0;
 		Pseye = returnPsi(Tee, pee, Zbar);
 
-%		Map the invariants to the normalized perturbations s
-		P = [ 	  1 		1 		  -1	  -Pseye;
-			alpha*gm1 M*M*alpha*gm1 alpha	alpha*Pseye;
-				  0			0 		   1	     0;
-				  0			0 		   0		 1];
+		q = [p(i); u(i); s(i); z(i)];
 
-		I = [I_1(i); I_2(i); I_3(i); I_4(i)];
-	
-		s = P\I;
-
-		phi(i) 		= s(1);
-		nu(i) 		= s(2);
-		sigma(i)	= s(3);
-		xi(i) 		= s(4);
+		phi(i) 		= q(1);
+		nu(i) 		= q(2);
+		sigma(i)	= q(3);
+		xi(i) 		= q(4);
 
 %		Map the normalized perturbations to the characteristics
 		R = [1 	M 	0 	0;
@@ -252,11 +240,26 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 			 0	0	1	0;
 			 0	0 	0 	1];
 	
-		w = R*s;
+		w = R*q;
 		w_p(i) = w(1);
 		w_m(i) = w(2);
 		w_s(i) = w(3);
 		w_z(i) = w(4);
+
+		G = 1/(1+gm1o2*M*M);
+
+		P = [ 	1		1	   		 	-1	 -Pseye;
+				G*gm1	G*gm1*M*M		G*1	  G*Pseye;
+				0		0				1		0;
+				0		0				0		1];
+
+		I = P*q;
+	
+		I_1(i) = I(1);
+		I_2(i) = I(2);
+		I_3(i) = I(3);
+		I_4(i) = I(4);
+
 	end
 
 %	Mach number vs spatial coordinate

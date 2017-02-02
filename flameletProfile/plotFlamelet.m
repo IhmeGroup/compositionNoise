@@ -32,7 +32,7 @@ function[] = plotFlamelet(fueltype)
 	hh = figure();
 	subplot(1,2,1);
 %	set(hh, 'Position', [0 0 650 450]);
-	set(hh, 'Position', [0 0 1600 500]);
+	set(hh, 'Position', [0 0 1900 500]);
 	[ax, h1, h2] = plotyy(x, T, x, [Y_fuel, Y_O2, Y_H2O]);
 	hold on;
 	plot([0.5 0.5], [0, 2500], 'k--','LineWidth', 2);
@@ -40,11 +40,12 @@ function[] = plotFlamelet(fueltype)
 	set(h2(1), 'LineWidth', 2, 'LineStyle', '--','color', 'b');
 	set(h2(2), 'LineWidth', 2, 'LineStyle', '-.','color','r');
 	set(h2(3), 'LineWidth', 2, 'LineStyle', ':','color','m');
-	xlabel('$Z \slash (Z + Z_{st}) [-]$', 'FontSize', 16, 'FontName', 'Times', 'Interpreter','LaTeX');
-	ylabel(ax(1), '$T$ [K]','FontSize', 16, 'FontName', 'Times', 'Interpreter', 'LaTeX');
-	ylabel(ax(2), '$Y_i [-]$','FontSize', 16, 'FontName', 'Times', 'Interpreter', 'LaTeX');
-	set(ax(1), 'FontSize', 16, 'FontName', 'Times','YColor', 'k');
-	set(ax(2), 'FontSize', 16, 'FontName', 'Times', 'YColor', 'k');
+	xlabel('$Z \slash (Z + Z_{st}) [-]$', 'FontSize', 20, 'FontName', 'Times', 'Interpreter','LaTeX');
+	ylabel(ax(1), '$T$ [K]','FontSize', 20, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	ylabel(ax(2), '$Y_i [-]$','FontSize', 20, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	set(ax(1), 'FontSize', 20, 'FontName', 'Times','YColor', 'k');
+	set(ax(2), 'FontSize', 20, 'FontName', 'Times', 'YColor', 'k');
+	title('(a)','FontWeight', 'Normal', 'FontName','Times', 'FontSize', 20);
 %	print -depsc Flamelet.eps
 
 %	Plot the Psi-Gibbs figure, b/c that is now a thing we're including
@@ -71,11 +72,12 @@ function[] = plotFlamelet(fueltype)
 	set(h2(1), 'LineWidth', 2, 'LineStyle', '--','color', 'b');
 %	set(h2(2), 'LineWidth', 2, 'LineStyle', '-.','color','r');
 %	set(h2(3), 'LineWidth', 2, 'LineStyle', ':','color','m');
-	xlabel('$Z \slash (Z + Z_{st}) [-]$', 'FontSize', 16, 'FontName', 'Times', 'Interpreter','LaTeX');
-	ylabel(ax(1), '$\Psi [-]$','FontSize', 16, 'FontName', 'Times', 'Interpreter', 'LaTeX');
-	ylabel(ax(2), '$g$ [MJ/kg]','FontSize', 16, 'FontName', 'Times', 'Interpreter', 'LaTeX');
-	set(ax(1), 'FontSize', 16, 'FontName', 'Times','YColor', 'k');
-	set(ax(2), 'FontSize', 16, 'FontName', 'Times', 'YColor', 'k');
+	xlabel('$Z \slash (Z + Z_{st}) [-]$', 'FontSize', 20, 'FontName', 'Times', 'Interpreter','LaTeX');
+	ylabel(ax(1), '$\Psi [-]$','FontSize', 20, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	ylabel(ax(2), '$g$ [MJ/kg]','FontSize', 20, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	set(ax(1), 'FontSize', 20, 'FontName', 'Times','YColor', 'k');
+	set(ax(2), 'FontSize', 20, 'FontName', 'Times', 'YColor', 'k');
+	title('(b)','FontWeight', 'Normal', 'FontName','Times', 'FontSize', 20);
 	
 	print -depsc Flamelet.eps
 

@@ -3,10 +3,13 @@ function[psi, gctr] = returnPsi(Tbar, pbar, Zbar)
 	global data fuel;
 %	Load species properties
 	if (fuel == 1)
+		data = load('../data/lowStrain/lowStrain.C12H26');
 		[Nspecies, species, a, A, MW] = speciesPropsC12H26();
 	elseif (fuel == 2)
+		data = load('../data/lowStrain/lowStrain.CH4');
 		[Nspecies, species, a, A, MW] = speciesPropsCH4();
 	elseif (fuel == 3)
+		data = load('../data/lowStrain/lowStrain.H2');
 		[Nspecies, species, a, A, MW] = speciesPropsH2();
 	else
 		error(strcat('Undefined fuel type = ', num2str(fuel)));

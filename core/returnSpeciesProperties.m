@@ -24,7 +24,8 @@ function[cp, h, s, g] = returnSpeciesProperties(T, p, Y, a, A, MW)
 		cpvec(i) 	= cpvec(i)*R_univ/MW(i);
 		hvec(i)		= hvec(i)*R_univ/MW(i)*T;
 		if (Y(i) >  1E-61)
-			svec(i) 	= svec(i)*(R_univ/MW(i)) - R_univ/MW(i)*log(Y(i)*p/1E6);
+%			svec(i) 	= svec(i)*(R_univ/MW(i)) - R_univ/MW(i)*log(Y(i)*p/1E6);
+			svec(i) 	= svec(i)*(R_univ/MW(i)) - R_univ/MW(i)*log(Y(i)*p/1E5);
 		end
 	end
 	myR = R_univ./MW;

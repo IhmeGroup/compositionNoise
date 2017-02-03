@@ -1,8 +1,18 @@
-function[] = generateHelmholtzSweepData();
+function[] = generateHelmholtzSweepData(fueltype);
 %	Plots the spatial evolution of the Duran and Moreau solution for linear velocity mach profiles at a variety of Helmholtz numbers
 %	The degree of oscillation can be (poorly) controlled by changing the value for epsilon. For the case considered here, 1E-8 seems about optimal. 
 %	If you change this parameter, then you're also going to have to change the tolerances on the wrapping function and possibly the ylim as well.
 %	Sweeping over the dimensionless frequency in increments of 0.5
+
+%	If fuel == 1, C12H26
+%	If Fuel == 2, CH4
+%	If Fuel == 3, H2
+
+	global fuel;
+	fuel = fueltype;
+
+	addpath('../core');
+	addpath('../data');
 
 	WP = cell(5,1);
 	WM = cell(5,1);

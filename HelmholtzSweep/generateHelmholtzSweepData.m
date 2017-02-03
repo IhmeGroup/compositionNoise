@@ -1,4 +1,4 @@
-function[eta A M] = validateDuranMoreau()
+function[OMEGA TRANS PHASE] = validateDuranMoreau(forcing)
 %	This function is intended to validate the (non-composition) portion of the solver by replicating the data found in
 %	Duran and Moreau, Solution of the quasi-one-dimensional linearized Euler equations using flow invariants and the Magnus expansion, JFM vol 723, pp 190-231. 2013
 %	The figure number (i.e. 5a, 5b, etc.) correspond to the equivalent figure in Duran and Moreau
@@ -40,21 +40,16 @@ function[eta A M] = validateDuranMoreau()
 			count = count + 1;
 			OMEGA(count) = omega;
 			if ((exist('subsol', 'var')) && (exist('supsol', 'var')))
-				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, 3, true, SPLINES, subsol, supsol);
+				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, forcing, true, SPLINES, subsol, supsol);
 			else
-				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, 3, true, SPLINES);
+				[transfer, subsol, supsol, ~, ~, ~, ~, ~, SPLINES] = DuranMoreau(M_a, M_b, M_c, omega, forcing, true, SPLINES);
 			end
-%			 1         2       3       4  5  6  7  8  9
 			TRANS(test,count,:) = [transfer(1,2), transfer(2,2), transfer(3,2), transfer(4,2), transfer(2,1)];
-%			PHASE(count) = [atan2(imag(transfer(1,2)), real(transfer(1,2)))];
-%			PHASE2(count) = [atan2(imag(transfer(2,2)), real(transfer(2,2)))];
-%			PHASE3(count) = [atan2(imag(transfer(2,1)), real(transfer(2,1)))];
 			PHASE(test, count, :) = [	atan2(imag(transfer(1,2)), real(transfer(1,2))), ...
 									 	atan2(imag(transfer(2,2)), real(transfer(2,2))), ...
 										atan2(imag(transfer(2,1)), real(transfer(2,1)))];
 		end%omega
 		clear subsol supsol;
 	end%for test
-	
-	save('validationData.mat', 'OMEGA', 'TRANS', 'PHASE');
+%	save('validationData.mat', 'OMEGA', 'TRANS', 'PHASE');
 end

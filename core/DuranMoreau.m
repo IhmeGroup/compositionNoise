@@ -34,8 +34,8 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 
 	epsilon = 1E-5;%This is the value of the perturbation distance (in eta) about the nozzle throat. Small values lead toward more accuracte (but more oscillatory and solower solutions)
 
-	N1 = 101;
-	N2 = 101;
+	N1 = 401;
+	N2 = 401;
 
 	[gamma, T0, p0, Zbar] = returnAmbientState();
 

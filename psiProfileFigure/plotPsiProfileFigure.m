@@ -5,9 +5,8 @@ function[] = plotPsiProfileFigure()
 	addpath('../data');
 
 	global data;%This is a variable used to carry the flamelet data, without it the constant-reloading of this file slows the code down substantially
-	global fuel;
-	global param;
-	global SPLINES;
+	global fuel, param, SPLINES, beta;
+	beta = -2;%Use linear vel grad nozzle
 	data = loadFuelData(fuel);
 
 	[gamma, T0, p0, Zbar] = returnAmbientState();

@@ -13,7 +13,8 @@ function[OMEGA TRANS PHASE] = validateDuranMoreau(forcing)
 %	parameters
 	Nomega = 51;
 	dOmega = 2/(Nomega-1);
-	global fuel data;
+	global fuel data beta;
+	beta = -2;%Use linear vel grad geometry
 	fuel = 2;
 	data = loadFuelData(fuel);
 

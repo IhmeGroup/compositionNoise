@@ -26,7 +26,8 @@ function[] = generateMaMbContourData()
 	epsilon = 4E-8;
 
 %	parameters
-	global fuel data param;
+	global fuel data param beta;
+	beta = -2;%Use linear velocity gradient nozzle
 	fuel = 2;
 	data = loadFuelData(fuel);
 

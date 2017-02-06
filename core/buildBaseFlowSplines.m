@@ -89,7 +89,7 @@ function[SPLINES] = buildBaseFlowSplines()
 	Psibar_sp	= spline(eta, Psibar);
 	ubar_sp		= spline(eta, ubar);
 
-	global SPLINES
+	global SPLINES;
 %				1		2		3		4			5	
 	SPLINES	= [M_sp; Tbar_sp; pbar_sp; Psibar_sp; ubar_sp];
 	size(SPLINES);

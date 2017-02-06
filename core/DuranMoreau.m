@@ -63,18 +63,20 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 	gm1o2 = gm1/2;%(gamma - 1)/2
 
 	if (beta == -2)
+		disp('Linear Velocity Gradient Nozzle!');
 		etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
 		L = etabounds(2) - etabounds(1);
 	else
+		disp(strcat('Variable geometry nozzle, beta = ', num2str(beta)))
 		etabounds = [-1, 1];
 		L = 2;
 	end
 
 
 %	The param vector is used to carry thermodynamic and bc data from the driver to the ODE rhs function and BCs
-%			  1		2		3		4		5		6	7	8		9		10		11		12		13		14		15		16
 	global param;
-	param = [M_a; 	M_b; 	M_c;	gamma; 	Omega; 	T0;	p0;	Zbar; 	w_p_a; 	w_m_a; 	w_s_a; 	w_z_a; 	w_p_b; 	w_m_b; 	w_s_b; 	w_z_b; L];
+%			  1		2		3		4		5		6	7	8		9		10		11		12		13		14		15		16		17
+	param = [M_a; 	M_b; 	M_c;	gamma; 	Omega; 	T0;	p0;	Zbar; 	w_p_a; 	w_m_a; 	w_s_a; 	w_z_a; 	w_p_b; 	w_m_b; 	w_s_b; 	w_z_b;  L];
 
 	global SPLINES;
 	if (~exist('SPLINY', 'var'))
@@ -118,15 +120,19 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 	if (subsonic)
 		disp('The flow is subsonic');
 %		Compute the eta bounds (see appendix of Duran & Moreau) for the subsonic problem
-		etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
+		if (beta == -2)%LinVelGrad
+			etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
+		else
+			etabounds = [-1,-epsilon];
+		end
 
 %		Initialize the BVP, values shouldn't matter
 		if (~exist('subsol', 'var'))
 			subsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N1), [0.5 0.5 0.5 0.5]);
 		end
-		if (~exist('supsol', 'var'))
-			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [0.5 0.5 0.5 0.5]);
-		end
+%		if (~exist('supsol', 'var'))
+%			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [0.5 0.5 0.5 0.5]);
+%		end
 
 %		Solve the bvp
 		subsol 	= bvp4c(@DuranMoreauODE, @SubsonicBCs, subsol, options);
@@ -147,7 +153,11 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %		[SPLINES] = buildBaseFlowSplines();
 		global SPLINES;
 %		Compute the corresponding spatial coordinates	
-		etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*one*one/(1+gm1o2*one*one))];
+		if (beta == -2)%linVelGrad
+			etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*one*one/(1+gm1o2*one*one))];
+		else
+			etabounds = [-1,-epsilon];
+		end
 %		Initialize the BVP
 		if (~exist('subsol', 'var'))
 			subsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [0.5 0.5 0.5 0.5]);
@@ -203,8 +213,12 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %		[SPLINES] = buildBaseFlowSplines();
 		global SPLINES;
 %		Spatial bounds
-		etabounds = [sqrt(gp1/2*one*one/(1+gm1o2*one*one)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
-%		Initializ
+		if (beta == -2)%LinVelGrad
+			etabounds = [sqrt(gp1/2*one*one/(1+gm1o2*one*one)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
+		else
+			etabounds = [epsilon,1];
+		end 
+%		Initialize
 		if (~exist('supsol', 'var'))
 			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [mean(I_1) mean(I_2) mean(I_3) mean(I_4)]);
 		end
@@ -224,8 +238,13 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %	Now that the full solution has been obtained, unpack it for plotting
 	for i = 1:length(eta)
 %		Compute the mean flow state from the Appendix of D&M
-		etahat = eta(i).*eta(i);
-		M = sqrt((2.0/gp1)*etahat/(1 - gm1/gp1*etahat));
+		if (beta == -2)
+			etahat = eta(i).*eta(i);
+			M = sqrt((2.0/gp1)*etahat/(1 - gm1/gp1*etahat));
+		else
+			M_sp 		= SPLINES(1);
+			M = ppval(M_sp, eta(i));
+		end
 		EM(i) = M;
 		alpha = 1/(1 + gm1o2*M*M); %pre-computed for convenience
 		pee = (1 + gm1o2*M*M)^(-gamma/gm1)*p0;

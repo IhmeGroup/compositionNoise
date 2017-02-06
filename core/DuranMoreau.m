@@ -28,6 +28,7 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 
 	global data;%This is a variable used to carry the flamelet data, without it the constant-reloading of this file slows the code down substantially
 	global fuel;
+	global beta;
 	data = loadFuelData(fuel);
 
 	Omega
@@ -61,8 +62,13 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 	gp1 = gamma + 1;%gamma + 1
 	gm1o2 = gm1/2;%(gamma - 1)/2
 
-	etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
-	L = etabounds(2) - etabounds(1);
+	if (beta == -2)
+		etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
+		L = etabounds(2) - etabounds(1);
+	else
+		etabounds = [-1, 1];
+		L = 2;
+	end
 
 
 %	The param vector is used to carry thermodynamic and bc data from the driver to the ODE rhs function and BCs
@@ -92,7 +98,6 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		plot_invariants			= true;
 	end
 
-
 	if (M_b < 1)
 		subsonic = true;
 		choked = false;
@@ -114,10 +119,6 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		disp('The flow is subsonic');
 %		Compute the eta bounds (see appendix of Duran & Moreau) for the subsonic problem
 		etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
-
-
-
-
 
 %		Initialize the BVP, values shouldn't matter
 		if (~exist('subsol', 'var'))

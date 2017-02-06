@@ -2,10 +2,12 @@ function[] = buildNozzleStudyGeometry()
 %	This is a function that builds the spatial coordinate vs. cross-sectional area and spatial coordinate vs Mach number figures for the geometry study at the values beta = -1, 0, and 1
 
 	close all;
+	lw = 4;
+	fs = 18;
 
 
 %	Compute the cross sectional areas	
-	N = 1000;
+	N = 500;
 	x = linspace(-1,1,N)';
 	A1 = [linspace(2,1,N/2)'; linspace(1,2,N/2)'];
 	A2 = 2-sqrt(1 - (x).^2);
@@ -15,20 +17,21 @@ function[] = buildNozzleStudyGeometry()
 	x = x + 1;
 
 %	plot the cross sectional area vs. eta
-	figure();
-	plot(x, A1, 'k-', 'LineWidth', 2);
+	h = figure();
+	set(h, 'Position', [0 0 800 300]);
+	subplot('Position', [0.08 0.15 0.4 0.75]);
+	plot(x, A1, 'k-', 'LineWidth', lw);
 	hold on;
-	plot(x, A2, 'b--','LineWidth', 2);
-	plot(x, A3, 'r:', 'LineWidth', 2);
-	plot([1 1], [0, 1], 'k--', 'LineWidth', 2);
+	plot(x, A2, 'b--','LineWidth', lw);
+	plot(x, A3, 'r:', 'LineWidth', lw);
+	plot([1 1], [0, 1], 'k--', 'LineWidth', lw);
 
 %	and format it
 	ylim([-0,2]);
-	xlabel('$\eta$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	ylabel('$A(\eta) \slash A^*$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	set(gca, 'FontSize', 14, 'FontName', 'Times');
-	h = legend('$\beta = 0$', '$\beta = 1$', '$\beta = -1$','Location', 'Southeast');
-	set(h, 'FontSize', 14, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	xlabel('$\eta$', 'Interpreter', 'LaTeX', 'FontSize', fs, 'FontName', 'Times');
+	ylabel('$A(\eta) \slash A^*$', 'Interpreter', 'LaTeX', 'FontSize', fs, 'FontName', 'Times');
+	set(gca, 'FontSize', fs, 'FontName', 'Times');
+	title('$(a)$', 'FontSize', fs, 'FontName', 'Times', 'Interpreter', 'LaTeX');
 
 
 %	Compute the Mach number using an iterative solver
@@ -37,6 +40,7 @@ function[] = buildNozzleStudyGeometry()
 	M3 = zeros(N,1);
 
 	for i= 1:N
+		disp(strcat(num2str(round(1000*i/N)/10), '% complete'));
 %		Seed the iterative solver with a subsonic guess if x < 1 or a supersonic guess if x > 1
 		if (x(i) < 1) Mguess = 0.5;
 		else Mguess = 1.5;
@@ -54,14 +58,17 @@ function[] = buildNozzleStudyGeometry()
 	end
 		
 %	Plot the profile
-	figure();
-	plot(x, M1, 'k-', 'LineWidth', 2);
+	subplot('Position', [0.58 0.15 0.4 0.75]);
+	plot(x, M1, 'k-', 'LineWidth', lw);
 	hold on;
-	plot(x, M2, 'b--', 'LineWidth', 2);
-	plot(x, M3, 'r:', 'LineWidth', 2);
-	xlabel('$\eta$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	ylabel('$\bar{M}(\eta)$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	h = legend('$\beta = 0$', '$\beta = 1$', '$\beta = -1$','Location', 'Southeast');
-	set(h, 'FontSize', 14, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	plot(x, M2, 'b--', 'LineWidth', lw);
+	plot(x, M3, 'r:', 'LineWidth', lw);
+	xlabel('$\eta$', 'Interpreter', 'LaTeX', 'FontSize', fs, 'FontName', 'Times');
+	ylabel('$M(\eta)$', 'Interpreter', 'LaTeX', 'FontSize', fs, 'FontName', 'Times');
+%	h = legend('$\beta = 0$', '$\beta = 1$', '$\beta = -1$','Location', 'Southeast');
+%	set(h, 'FontSize', fs, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	title('$(b)$', 'FontSize', fs, 'FontName', 'Times', 'Interpreter', 'LaTeX');
+	set(gca, 'FontSize', fs, 'FontName', 'Times');
 
+	print -depsc NozzleGeometry.eps
 end%buildNozzleGeometry

@@ -1,6 +1,12 @@
-function[ans] = computeFluctuation()
+function[ans] = computeFluctuation(fuel)
 	close all;
+	if (fuel == 1)%C12H26
 	data = load('../data/lowStrain/lowStrain.C12H26');
+	elseif (fuel == 2)%CH4
+		data = load('../data/lowStrain/lowStrain.CH4');
+	elseif (fuel == 3)%H2
+		data = load('../data/lowStrain/lowStrain.H2');
+	end
 	data = data';
 	Z = data(:,1);
 	T = data(:,2);

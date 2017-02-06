@@ -236,20 +236,29 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 	end
 
 %	Now that the full solution has been obtained, unpack it for plotting
+	M_sp 		= SPLINES(1);
+	Tbar_sp 	= SPLINES(2);
+	pbar_sp 	= SPLINES(3);
+	Psibar_sp 	= SPLINES(4);
+	ubar_sp		= SPLINES(5);
 	for i = 1:length(eta)
 %		Compute the mean flow state from the Appendix of D&M
-		if (beta == -2)
-			etahat = eta(i).*eta(i);
-			M = sqrt((2.0/gp1)*etahat/(1 - gm1/gp1*etahat));
-		else
-			M_sp 		= SPLINES(1);
-			M = ppval(M_sp, eta(i));
-		end
-		EM(i) = M;
-		alpha = 1/(1 + gm1o2*M*M); %pre-computed for convenience
-		pee = (1 + gm1o2*M*M)^(-gamma/gm1)*p0;
-		Tee = (1 + gm1o2*M*M)^(-1)*T0;
-		Pseye = returnPsi(Tee, pee, Zbar);
+%		if (beta == -2)
+%			etahat = eta(i).*eta(i);
+%			M = sqrt((2.0/gp1)*etahat/(1 - gm1/gp1*etahat));
+%		else
+%			M = ppval(M_sp, eta(i));
+%			Pseye = ppval(Psibar_sp, eta(i));
+%		end
+%		EM(i) = M;
+%		alpha = 1/(1 + gm1o2*M*M); %pre-computed for convenience
+%		pee = (1 + gm1o2*M*M)^(-gamma/gm1)*p0;
+%		Tee = (1 + gm1o2*M*M)^(-1)*T0;
+%		Pseye = returnPsi(Tee, pee, Zbar);
+		M = ppval(M_sp, eta(i));
+		alpha = 1/(1 + gm1o2*M*M);%pre-computed for convenience
+		Pseye = ppval(Psibar_sp, eta(i));
+		
 
 %		Map the invariants to the normalized perturbations s
 		P = [ 	  1 		1 		  -1	  -Pseye;

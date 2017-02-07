@@ -16,15 +16,19 @@ function[] = buildNozzleStudyGeometry()
 %	shift x to keep the throat at 1
 	x = x + 1;
 
+%	Rescale x so L =1 for all nozzles
+	ex = x - min(x);
+	ex = ex./max(ex);
+
 %	plot the cross sectional area vs. eta
 	h = figure();
 	set(h, 'Position', [0 0 800 300]);
 	subplot('Position', [0.08 0.15 0.4 0.75]);
-	plot(x, A1, 'k-', 'LineWidth', lw);
+	plot(ex, A1, 'k-', 'LineWidth', lw);
 	hold on;
-	plot(x, A2, 'b--','LineWidth', lw);
-	plot(x, A3, 'r:', 'LineWidth', lw);
-	plot([1 1], [0, 1], 'k--', 'LineWidth', lw);
+	plot(ex, A2, 'b--','LineWidth', lw);
+	plot(ex, A3, 'r:', 'LineWidth', lw);
+	plot([.5 .5], [0, 1], 'k--', 'LineWidth', lw);
 
 %	and format it
 	ylim([-0,2]);
@@ -56,6 +60,10 @@ function[] = buildNozzleStudyGeometry()
 			M3(i) = fsolve(@MfromA, Mguess, [], A3(i));
 		end
 	end
+
+%	Rescale x so L =1 for all nozzles
+	x = x - min(x);
+	x = x./max(x);
 		
 %	Plot the profile
 	subplot('Position', [0.58 0.15 0.4 0.75]);

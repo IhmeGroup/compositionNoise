@@ -24,6 +24,7 @@ function[] = generateNozzleData()
 	[gamma, T0, p0, Zbar] = returnAmbientState();
 
 	for omega = 0:dOmega:2.0
+%	for omega = 0:0
 		disp(omega)
 		count = count + 1;
 		OMEGA(count) = omega;

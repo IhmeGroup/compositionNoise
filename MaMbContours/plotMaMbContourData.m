@@ -10,6 +10,16 @@ function[] = plotMaMbContourData()
 			disp('We got ourselves a winner!')
 			load(filename);
 
+			[a,b] = size(WPS);
+			for c = 1:a
+				for d = 1:b
+					if (MA(c,d) > MB(c,d)) 
+						WPS(c,d) = Inf; 
+						WPZ(c,d) = Inf;
+					end
+				end
+			end
+
 %			Composition Noise Contour Field
 			figure();
 			surface(MA, MB, abs(WPZ) + 1E-3, 'EdgeColor', 'none');
@@ -18,7 +28,7 @@ function[] = plotMaMbContourData()
 			ylabel('$M_b$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
 			colorbar();
 			colormap('jet');
-			title('Composition');
+			title(strcat('Composition:', filename));
 
 %			Entropy Noise Contour Field
 			figure();
@@ -28,7 +38,7 @@ function[] = plotMaMbContourData()
 			ylabel('$M_b$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
 			colorbar();
 			colormap('jet');
-			title('Entropy');
+			title(strcat('Entropy:', filename));
 			
 %			Ratio of Composition Noise to Entropy Noise Contour Field
 			figure();
@@ -39,6 +49,7 @@ function[] = plotMaMbContourData()
 			ylabel('$M_b$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
 			colormap('jet');
 			set(gca, 'FontSize', 14, 'FontName', 'Times');
+			title(strcat('Ratio: ', filename));
 		else
 			disp('Sorry, doesnt match bro')
 		end%file is a data file

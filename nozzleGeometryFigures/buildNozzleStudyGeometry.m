@@ -1,6 +1,9 @@
 function[] = buildNozzleStudyGeometry()
 %	This is a function that builds the spatial coordinate vs. cross-sectional area and spatial coordinate vs Mach number figures for the geometry study at the values beta = -1, 0, and 1
 
+	addpath('../core/');
+	addpath('../data/');
+
 	close all;
 	lw = 4;
 	fs = 18;

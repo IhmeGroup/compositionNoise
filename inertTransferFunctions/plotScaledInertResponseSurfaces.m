@@ -1,16 +1,13 @@
-function[] = plotInertTransferFunction()
+function[] = plotScaledInertResponseSurfaces()
 	close all;
 	addpath('../core');
 	addpath('../data');
 
 	fs = 22;
-	lw = 4;
-
 
 	[Nsp, species, a, A, MW] = speciesPropsInert();
 	Nmach = 201;
 	Npts = 101;
-	hh = figure();
 	Z = zeros(Npts, Nmach);
 	Pratio = zeros(Npts, Nmach);
 	Zratio = zeros(Npts, Nmach);
@@ -33,7 +30,6 @@ function[] = plotInertTransferFunction()
 		elseif (inert == 4) %Neon
 			Yfuel= [0.0000 	0.0000 	0.0000 	0.0000 	0.0000 	0.0000 	1.0000 	0.0000 	0.0000];
 		end
-
 
 		for i = 1:Npts
 			Y = (i-1)*0.01;
@@ -81,26 +77,28 @@ function[] = plotInertTransferFunction()
 			end%for j = 1:Nmach
 		end%for i = 1:Npts
 
-		figure(hh)
-		if (inert == 1)
-			plot(MB(51,:), [abs(Zratio(51,:))], 'LineWidth',lw);
-		elseif (inert == 2)
-			plot(MB(51,:), [abs(Zratio(51,:))], '--', 'LineWidth',lw);
-		elseif (inert == 3)
-			plot(MB(51,:), [abs(Zratio(51,:))], '-.', 'LineWidth',lw);
-		end
+		hh = figure();
+		set(hh, 'Position', [0 0 600 450]);
+		surface(Z,MB,abs(Zratio),'edgecolor','none');
+		shading interp;
+		h = colorbar('northoutside');
+		set(h, 'FontSize', fs);
 		hold on;
+		plot3([0 1], [1 1], [1E9 1E9], 'w--', 'LineWidth', 4);
+		ylabel('$M_c$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+		set(gca,'FontSize', fs, 'FontName', 'Times');
+		colormap('jet');
+		caxis([0,2]);
 
+		if (inert == 1)
+			xlabel('$Y_{\textrm{Ar}}$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+			print -djpeg ScaledInertResponseAr.jpg
+		elseif (inert == 2)
+			xlabel('$Y_{\textrm{He}}$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+			print -djpeg ScaledInertResponseHe.jpg
+		elseif (inert == 3)
+			xlabel('$Y_{\textrm{Kr}}$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+			print -djpeg ScaledInertResponseKr.jpg
+		end
 	end%inert
-	figure(hh);
-	plot(MB(51,:), [abs(Pratio(51,:))], ':', 'LineWidth',lw);
-	plot(MB(51,:), [abs(Sratio(51,:))],  'LineWidth',lw/4);
-	plot([1 1], [0, 2], 'k--', 'LineWidth', lw);
-	xlabel('$M_c$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
-	ylabel('Response','FontSize', fs, 'FontName','Times');
-	set(gca,'FontSize', fs, 'FontName','Times');
-	aa = legend('$\pi^+_c \slash \xi_{a,Ar}$', '$\pi^+_c \slash \xi_{a,He}$', '$\pi^+_c \slash \xi_{a,Kr}$','$\pi^+_c \slash \pi^+_a$', '$\pi^+_c \slash \sigma_a$');
-	set(aa, 'Interpreter','LaTeX', 'FontSize', fs, 'FontName','Times', 'Location','West');
-
-	print -depsc InertTransferFunctionZ50.eps
-end%plotInertTransferFunction()
+end%plotScaledInertResponseSurfaces()

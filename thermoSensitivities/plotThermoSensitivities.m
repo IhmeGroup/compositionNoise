@@ -1,4 +1,4 @@
-function[] = plotFuelTransferFunctions()
+function[] = plotThermoSensitivities()
 	close all;
 
 	lw = 4;
@@ -8,26 +8,33 @@ function[] = plotFuelTransferFunctions()
 	NMach = 201;
 	addpath('../data');
 	addpath('../core');
-	for run = 1:4
+	fuel = 2;
+	Z_st = 0.0551538;
+	[Nspecies, species, a, A, MW] = speciesPropsGRI3();
+	for run = 1:9
+%		First, the chi sweep
 		if (run == 1)
-			fuel = 1;
-			data = load('../data/lowStrain/lowStrain.H2');
-			Z_st = 0.0285207;
-			[~, Npts] = size(data);
-			[Nspecies, species, a, A, MW] = speciesPropsH2();
-		elseif ((run == 2) || (run == 4))
-			fuel = 2;
-			data = load('../data/lowStrain/lowStrain.CH4');
-			Z_st = 0.0551538;
-			[~, Npts] = size(data);
-			[Nspecies, species, a, A, MW] = speciesPropsCH4();
+			data = load('../data/thermoStudy/CH4_p01_0chi00001tf0300to0300');
+		elseif (run == 2)
+			data = load('../data/thermoStudy/CH4_p01_0chi00010tf0300to0300');
 		elseif (run == 3)
-			fuel = 3;
-			data = load('../data/lowStrain/lowStrain.C12H26');
-			Z_st = 0.0627964;
-			[~, Npts] = size(data);
-			[Nspecies, species, a, A, MW] = speciesPropsC12H26();
+			data = load('../data/thermoStudy/CH4_p01_0chi33.8267tf0300to0300Tst1749');
+%		Then, the pre-heat sweep			
+		elseif (run == 4)
+			data = load('../data/thermoStudy/CH4_p01_0chi00001tf0400to0400');
+		elseif (run == 5)
+			data = load('../data/thermoStudy/CH4_p01_0chi00001tf0600to0600');
+		elseif (run == 6)
+			data = load('../data/thermoStudy/CH4_p01_0chi00001tf0900to0900');
+%		Lastly, the pressure sweep			
+		elseif (run == 7)
+			data = load('../data/thermoStudy/CH4_p16_0chi00001tf0300to0300');
+		elseif (run == 8)
+			data = load('../data/thermoStudy/CH4_p40_0chi00001tf0300to0300');
+		elseif (run == 9)
+			data = load('../data/thermoStudy/CH4_p64_0chi00001tf0300to0300');
 		end
+		[~, Npts] = size(data);
 		hh = figure();
 		M_a = 0.0;
 		p_a = 1.0E6;
@@ -126,10 +133,24 @@ function[] = plotFuelTransferFunctions()
 		xlim([0, 1]);
 		hold on;
 		plot3([0 1],[1 1], [1E9, 1E9], 'w--', 'LineWidth', lw); 
-		if (run == 1) print -djpeg H2Transfer.jpg
-		elseif (run == 2) print -djpeg CH4Transfer.jpg
-		elseif (run == 3) print -djpeg C12H26Transfer.jpg
-		elseif (run == 4) print -djpeg CH4TemperatureIndependence.jpg
+		if (run == 1)
+			print -djpeg CH4_chi_01.jpg
+		elseif (run == 2)
+			print -djpeg CH4_chi_10.jpg
+		elseif (run == 3)
+			print -djpeg CH4_chi_33.jpg
+		elseif (run == 4)
+			print -djpeg CH4_T_400.jpg
+		elseif (run == 5)
+			print -djpeg CH4_T_600.jpg
+		elseif (run == 6)
+			print -djpeg CH4_T_900.jpg
+		elseif (run == 7)
+			print -djpeg CH4_p_16.jpg
+		elseif (run == 8)
+			print -djpeg CH4_p_40.jpg
+		elseif (run == 9)
+			print -djpeg CH4_p_64.jpg
 		end
 
 		if (plot_checks)

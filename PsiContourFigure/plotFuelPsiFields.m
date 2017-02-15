@@ -1,5 +1,9 @@
 function[] = plotFuelPsiFields(fuel)
 	close all;
+
+	fs = 22;
+	lw = 4;
+
 	NMach = 201;
 
 	addpath('../data');
@@ -57,17 +61,18 @@ function[] = plotFuelPsiFields(fuel)
 		Rbar = 8.31446E7/MWbar;
 		ZA(i) = Zctr;
 		[cpfixed, ~, ~, ~] = returnSpeciesProperties(T_a, p_a, Yctr, a, A, MW);
-%		[psi_a,	gamma] = returnPsi(T_a, p_a, Ylft, Yctr, Yrgt, Zlft, Zctr, Zrgt, a, A, MW, Rbar, cpfixed);
-		[psi_a] = returnPsi(T_a, p_a, Zctr);
+%		[psi_a,	gamma] = returnInertPsi(T_a, p_a, Ylft, Yctr, Yrgt, Zlft, Zctr, Zrgt, a, A, MW, Rbar, cpfixed);
 		gamma = cpfixed/(cpfixed - Rbar);
 		for j = 1:NMach
 			M_b = (j-1)*0.01;
 			T_b = (1 + (gamma-1)/2*M_b*M_b)^(-1)*T_a;
 			p_b = (1 + (gamma-1)/2*M_b*M_b)^(-gamma/(gamma-1))*p_a;
 			MB(i,j) = M_b;
-			ZEE(i,j) = Zctr./(Zctr + Z_st);
-%			psi_b = returnPsi(T_b, p_b, Ylft, Yctr, Yrgt, Zlft, Zctr, Zrgt, a, A, MW, Rbar, cpfixed);
-			psi_b = returnPsi(T_b, p_b, Zctr);
+			phi = Zctr./(1 - Zctr).*(1 - Z_st)./Z_st;
+			ZEE(i,j) = phi./(1 + phi);
+%			ZEE(i,j) = Zctr./(Zctr + Z_st);
+			psi_b = returnInertPsi(T_b, p_b, Ylft, Yctr, Yrgt, Zlft, Zctr, Zrgt, a, A, MW, Rbar, cpfixed);
+%			psi_b = returnPsi(T_b, p_b, Zctr);
 			PSIB(i,j) = psi_b;
 		end%for j = 1:M_b
 	end%i = 1:Npts
@@ -79,30 +84,37 @@ function[] = plotFuelPsiFields(fuel)
 	figure(hh)
 	surface(ZEE, MB, PSIB, 'EdgeColor','None');
 	shading('interp');
-	xlabel('$Z \slash (Z + Z_{st})$ [-]', 'Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	ylabel('$M_b$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	title('$\psi$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	set(gca,'FontSize', 14, 'FontName','Times');
-	colorbar();
+	xlabel('$Z^*$ [-]', 'Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+	ylabel('$M_b$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+%	title('$\psi$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
+	set(gca,'FontSize', fs, 'FontName','Times');
+	hold on;
+	plot3([0 1], [1 1], [1E9 1e9], 'w--', 'LineWidth', lw);
+	colorbar('northoutside');
 	colormap('jet');
-	xlim([0, 1/(1 + Z_st)]);
+%	xlim([0, 1/(1 + Z_st)]);
+	xlim([0, 1]);
 
-	h2 = figure();
-	dPSIBdMach = zeros(Npts, NMach);
-	for i = 1:Npts
-		dPSIBdMach(i,1) = (PSIB(i,2) - PSIB(i,1))/(MB(i,2) - MB(i,1));
-		for j = 2:NMach - 1
-			dPSIBdMach(i,j) = (PSIB(i,j+1) - PSIB(i,j-1))/(MB(i,j+1) - MB(i,j-1));
-		end%for j
-		dPSIBdMach(i,NMach) = (PSIB(i,NMach) - PSIB(i,NMach-1))/(MB(i,NMach) - MB(i,NMach-1));
-	end
-	surface(ZEE, MB, dPSIBdMach, 'EdgeColor', 'None');
-	shading('interp');
-	xlabel('$Z \slash (Z + Z_{st})$ [-]', 'Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	ylabel('$M_b$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	title('$\partial \psi \slash \partial M_b$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
-	set(gca,'FontSize', 14, 'FontName','Times');
-	colorbar();
-	colormap('jet');
-	xlim([0, 1/(1 + Z_st)]);
+	print -djpeg CH4PsiContours.jpg
+
+	if (1 == 2)
+		h2 = figure();
+		dPSIBdMach = zeros(Npts, NMach);
+		for i = 1:Npts
+			dPSIBdMach(i,1) = (PSIB(i,2) - PSIB(i,1))/(MB(i,2) - MB(i,1));
+			for j = 2:NMach - 1
+				dPSIBdMach(i,j) = (PSIB(i,j+1) - PSIB(i,j-1))/(MB(i,j+1) - MB(i,j-1));
+			end%for j
+			dPSIBdMach(i,NMach) = (PSIB(i,NMach) - PSIB(i,NMach-1))/(MB(i,NMach) - MB(i,NMach-1));
+		end
+		surface(ZEE, MB, dPSIBdMach, 'EdgeColor', 'None');
+		shading('interp');
+		xlabel('$Z \slash (Z + Z_{st})$ [-]', 'Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
+		ylabel('$M_b$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
+		title('$\partial \psi \slash \partial M_b$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
+		set(gca,'FontSize', 14, 'FontName','Times');
+		colorbar();
+		colormap('jet');
+		xlim([0, 1/(1 + Z_st)]);
+	end%(1 == 2)
 end%plotFuelPsiFields

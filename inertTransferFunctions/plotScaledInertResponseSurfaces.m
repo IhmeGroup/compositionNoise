@@ -52,7 +52,8 @@ function[] = plotScaledInertResponseSurfaces()
 			gamma = cpfixed/(cpfixed - Rbar);
 			[psi_a] = returnInertPsi(T0, p0, Ylft, Yctr, Yrgt, Zlft, Zctr, Zrgt, a, A, MW, Rbar, cpfixed);
 			GAMMA(i) = gamma;
-			Zdp = sqrt(Y*(1-Y));
+%			Zdp = sqrt(Y*(1-Y));
+			Zdp = 1/sqrt(2)*min(Y, (1-Y));
 			for j = 1:Nmach
 				M_b = (j-1)*0.01;
 				Z(i,j) = Y;
@@ -88,7 +89,8 @@ function[] = plotScaledInertResponseSurfaces()
 		ylabel('$M_c$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
 		set(gca,'FontSize', fs, 'FontName', 'Times');
 		colormap('jet');
-		caxis([0,2]);
+%		caxis([0,2]);
+		caxis([0, 1]);
 
 		if (inert == 1)
 			xlabel('$Y_{\textrm{Ar}}$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');

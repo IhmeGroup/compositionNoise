@@ -1,4 +1,4 @@
-function[Nspecies, species, a, A, MW, Hover] = speciesProps()
+function[Nspecies, species, a, A, MW, Hover] = speciesPropsInert()
 	Nspecies = 9;
 %	1	2	3	4	5	6	7	8   9
  	species = {'Ar','CO','CO_2','He','Kr','N_2', 'Ne', 'O_2', 'H_2O'};

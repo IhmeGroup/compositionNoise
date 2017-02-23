@@ -9,6 +9,10 @@ function[gamma, T0, p0, Zbar] = returnAmbientState()
 		Zbar = 0.0627964;%stoichiometric value
 	elseif (fuel == 3)
 		Zbar = 0.0627964;%stoichiometric value
+	elseif (fuel == 4)
+		Zbar = 0.5;
+		T0 = 316.483;%K
+		p0 = 98043.4487;%Pa
 	else
 		error('fuel not defined');
 	end

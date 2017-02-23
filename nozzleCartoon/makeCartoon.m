@@ -141,6 +141,8 @@ function[] = makeCartoon()
 	plot([llcx2+3*lboxx2/8], llcy2+3*lboxy2/8, 'ro');
 	plot([llcx2+3*lboxx2/8], llcy2+5*lboxy2/8, 'ro');
 	plot([llcx2+3*lboxx2/8, llcx2+3*lboxx2/8], [llcy2, llcy2 + lboxy2], 'r:');
+	plot([llcx, llcx2+3*lboxx2/8], [llcy2 + 3*lboxy2/8, llcy2 + 3*lboxy2/8], 'r:');
+	plot([llcx + lboxx2,llcx2+3*lboxx2/8], [llcy2 + 5*lboxy2/8, llcy2 + 5*lboxy2/8], 'r:');
 
 
 %	Add a third plot to show where the mean state comes from

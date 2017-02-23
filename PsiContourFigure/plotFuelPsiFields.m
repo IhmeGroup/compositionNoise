@@ -85,7 +85,7 @@ function[] = plotFuelPsiFields(fuel)
 	surface(ZEE, MB, PSIB, 'EdgeColor','None');
 	shading('interp');
 	xlabel('$Z^*$ [-]', 'Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
-	ylabel('$M_b$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+	ylabel('$M_c$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
 %	title('$\psi$','Interpreter','LaTeX', 'FontSize', 14, 'FontName', 'Times');
 	set(gca,'FontSize', fs, 'FontName','Times');
 	hold on;

@@ -1,4 +1,4 @@
-%		 1 	  2   3     4     5     6
+%		 1 	  2   3     4     5     6						   1  2  3     4     5     6     7     8     9  10 11  12    13	
 function[psi, cp, hctr, sctr, gctr, gammactr] = returnInertPsi(T, p, Ylft, Yctr, Yrgt, Zlft, Zctr, Zrgt, a, A, MW, Rbar, cpfixed)
 	[~, ~, ~, glft] = returnSpeciesProperties(T, p, Ylft, a, A, MW);
 	[cp, hctr, sctr, gctr]	= returnSpeciesProperties(T, p, Yctr, a, A, MW);

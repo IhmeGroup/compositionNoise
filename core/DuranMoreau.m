@@ -29,7 +29,9 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 	global data;%This is a variable used to carry the flamelet data, without it the constant-reloading of this file slows the code down substantially
 	global fuel;
 	global beta;
-	data = loadFuelData(fuel);
+	if (fuel <= 3) 
+			data = loadFuelData(fuel); 
+	end
 
 	Omega
 
@@ -130,9 +132,9 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		if (~exist('subsol', 'var'))
 			subsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N1), [0.5 0.5 0.5 0.5]);
 		end
-%		if (~exist('supsol', 'var'))
-%			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [0.5 0.5 0.5 0.5]);
-%		end
+		if (~exist('supsol', 'var'))
+			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [0.5 0.5 0.5 0.5]);
+		end
 
 %		Solve the bvp
 		subsol 	= bvp4c(@DuranMoreauODE, @SubsonicBCs, subsol, options);

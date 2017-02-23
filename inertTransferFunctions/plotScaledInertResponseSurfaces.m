@@ -85,7 +85,7 @@ function[] = plotScaledInertResponseSurfaces()
 		h = colorbar('northoutside');
 		set(h, 'FontSize', fs);
 		hold on;
-		plot3([0 1], [1 1], [1E9 1E9], 'w--', 'LineWidth', 4);
+		plot3([0.5 0.5], [0 2], [1E9 1E9], 'w--', 'LineWidth', 4);
 		ylabel('$M_c$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
 		set(gca,'FontSize', fs, 'FontName', 'Times');
 		colormap('jet');

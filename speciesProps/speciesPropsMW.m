@@ -1,4 +1,4 @@
-function[Nspecies, species, a, A, MW, Hover] = speciesProps()
+function[Nspecies, species, a, A, MW, Hover] = speciesPropsMW()
 	global molweight;
 	Nspecies = 3;
 %	1	2	3	4	5	6	7	8   9

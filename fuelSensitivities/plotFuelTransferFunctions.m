@@ -8,29 +8,48 @@ function[] = plotFuelTransferFunctions()
 	NMach = 201;
 	addpath('../data');
 	addpath('../core');
-	for run = 1:4
+%	for run = 1:4
+	for run = 5:5
 		if (run == 1)
 			fuel = 1;
 			data = load('../data/lowStrain/lowStrain.H2');
 			Z_st = 0.0285207;
 			[~, Npts] = size(data);
 			[Nspecies, species, a, A, MW] = speciesPropsH2();
-		elseif ((run == 2) || (run == 4))
+			p_a = 1.0E6;
+		elseif (run == 2) 
 			fuel = 2;
 			data = load('../data/lowStrain/lowStrain.CH4');
 			Z_st = 0.0551538;
 			[~, Npts] = size(data);
 			[Nspecies, species, a, A, MW] = speciesPropsCH4();
+			p_a = 1.0E6;
 		elseif (run == 3)
 			fuel = 3;
 			data = load('../data/lowStrain/lowStrain.C12H26');
 			Z_st = 0.0627964;
 			[~, Npts] = size(data);
 			[Nspecies, species, a, A, MW] = speciesPropsC12H26();
+			p_a = 1.0E6;
+		elseif (run == 4)
+			fuel = 2;
+			data = load('../data/lowStrain/lowStrain.CH4');
+			Z_st = 0.0551538;
+			[~, Npts] = size(data);
+			[Nspecies, species, a, A, MW] = speciesPropsCH4();
+			p_a = 1.0E6;
+			T_a = 2100.0;
+		elseif (run == 5) || (run == 6)
+			fuel = 5;
+			data = load('../data/lowStrain/lowStrain.CH4');
+			Z_st = 0.0551538;
+			[~, Npts] = size(data);
+			[Nspecies, species, a, A, MW] = speciesPropsCH4();
+			T_a = 1892;
+			p_a = 2.42E5;
+			M_a = 0.05;
 		end
 		hh = figure();
-		M_a = 0.0;
-		p_a = 1.0E6;
 		MB = zeros(NMach,Npts)';
 		ZEE = zeros(NMach,Npts)';
 		Pratio = zeros(NMach,Npts)';
@@ -45,9 +64,7 @@ function[] = plotFuelTransferFunctions()
 		GA = zeros(Npts,1);
 		YA = zeros(Npts,Nspecies);
 		for i = 1:Npts
-			if (run == 4)
-				T_a = 2100.0;
-			else
+			if (i <= 3)
 				T_a  = data(2,i);
 			end
 			TA(i) = T_a;
@@ -85,6 +102,7 @@ function[] = plotFuelTransferFunctions()
 			[psi_a, CP(i), HA(i), SA(i), GA(i), gamma] = returnInertPsi(T_a, p_a, Ylft, Yctr, Yrgt, Zlft, Zctr, Zrgt, a, A, MW, Rbar, cpfixed);
 			PSIA(i) = psi_a;
 			for j = 1:NMach
+				[i j]
 				M_b = (j-1)*0.01;
 				T_b = (1 + (gamma-1)/2*M_b*M_b)^(-1)*T_a;
 				p_b = (1 + (gamma-1)/2*M_b*M_b)^(-gamma/(gamma-1))*p_a;
@@ -112,18 +130,29 @@ function[] = plotFuelTransferFunctions()
 %		Zratio(Npts,:) = (Zratio(Npts-2,:) - Zratio(Npts-1,:))/(ZA(Npts-2) - ZA(Npts-1)) * (ZA(Npts-1) - ZA(Npts)) + Zratio(Npts-1,:);
 
 		figure(hh)
-		surface(ZEE, MB, log10(abs(Zratio./Sratio)), 'EdgeColor','None');
+		if (run < 5)
+			surface(ZEE, MB, log10(abs(Zratio./Sratio)), 'EdgeColor','None');
+		elseif (run == 5)
+			surface(ZEE, MB, log10(abs(Zratio)./abs(Sratio)), 'EdgeColor', 'none');
+		elseif (run == 6)
+			surface(ZEE, MB, log10(abs(Zratio)./abs(Pratio)), 'EdgeColor', 'none');
+		end
 		shading('interp');
 	%	surface(log10(abs(Zratio)), 'EdgeColor','None');
 		xlabel('$Z^*$ [-]', 'Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
-		ylabel('$M_c$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
+		ylabel('$M_b$','Interpreter','LaTeX', 'FontSize', fs, 'FontName', 'Times');
 		set(gca,'FontSize', fs, 'FontName','Times');
 		gg = colorbar('northoutside');
 		set(gg, 'FontSize', fs, 'FontName', 'Times');
 		colormap('jet');
-		caxis([-1,2.5])
+		if (run < 5)
+			caxis([-1,2.5])
+		elseif (run == 5)
+			caxis([-1,2])
+		end
 %		xlim([0, 1/(1 + Z_st)]);
 		xlim([0, 1]);
+		ylim([M_a, max(max(MB))]);
 		hold on;
 		plot3([0 1],[1 1], [1E9, 1E9], 'w--', 'LineWidth', lw); 
 		if (run == 1) print -djpeg H2Transfer.jpg

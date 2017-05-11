@@ -13,6 +13,11 @@ function[gamma, T0, p0, Zbar] = returnAmbientState()
 		Zbar = 0.5;
 		T0 = 316.483;%K
 		p0 = 98043.4487;%Pa
+	elseif (fuel == 5)%ICSV
+		Zbar = 0.0510;
+%		Zbar = 0.95;
+		T0 = 1892;
+		p0 = 2.42E5;
 	else
 		error('fuel not defined');
 	end

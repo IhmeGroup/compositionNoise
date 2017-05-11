@@ -1,0 +1,21 @@
+!A 24-species reduced mechanism for n-dodecane/air 
+!based on JetSURF
+!Yang Gao and Tianfeng Lu, 
+!Email: tlu@engr.uconn.edu
+!University of Connecticut
+
+ELEMENTS
+O H C N 
+END
+
+SPECIES
+H               	O               	OH              	HO2             	
+H2              	H2O             	H2O2            	O2              	
+CH3             	CH4             	CH2O            	CO              	
+CO2             	C2H2            	C2H4            	C2H6            	
+CH2CHO          	aC3H5           	C3H6            	C2H3CHO         	
+C4H81           	NC12H26         	C6H12           	N2              	
+END
+
+REACTIONS
+END

@@ -38,7 +38,7 @@ function[d_I_d_eta] = DuranMoreauODE(eta, I)
 	M2 		= M*M;
 	Tbar 	= ppval(Tbar_sp, eta);
 	pbar 	= ppval(pbar_sp, eta);
-	Psibar 	= ppval(Psibar_sp, eta);
+	Psibar 	= ppval(Psibar_sp, eta)
 	ubar 	= ppval(ubar_sp, eta);
 
 %	etahat = eta.*eta;
@@ -53,10 +53,12 @@ function[d_I_d_eta] = DuranMoreauODE(eta, I)
 	
 
 
-	A = -2*pi*sqrt(-1)*Omega/(ubar*(M*M-1))*[ 			M2			-(1+gm1o2*M2)/gm1				gamma/gm1					gamma/gm1*Psibar;
+	A = -2*pi*sqrt(-1)*Omega/(ubar*(M*M-1))*[ 			M2			-(1+gm1o2*M2)/gm1				gamma/gm1					Psibar*gamma/gm1;
 											 -gm1*M2/(1+gm1o2*M2)			M2				-(gm1*M2+1)/(1+gm1o2*M2)	-(1+gm1*M2)/(1+gm1o2*M2)*Psibar;
 														0					0							M2-1							0;
 														0					0							0								(M2-1)];
 
 	d_I_d_eta = A*I/L;
+
+
 end

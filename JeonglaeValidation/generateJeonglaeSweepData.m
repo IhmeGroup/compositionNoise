@@ -22,11 +22,16 @@ function[OMEGA TRANS PHASE] = validateDuranMoreau(forcing)
 	TRANS = zeros(3,Nomega,5);
 	PHASE = zeros(3, Nomega, 3);
 
-	for test = 1:3
-		if (test == 1)		M_a = 0.29; M_b = 0.88; M_c = 0.0;
-		elseif (test == 2) 	M_a = 0.29; M_b = 1.02; M_c = 0.0; 
-		elseif (test == 3) 	M_a = 0.29; M_b = 1.50; M_c = 0.0; 
-		end
+	for test = 1
+		M_a = 0.1;
+		M_b = 1.5;
+		M_c = 0.0;
+
+%	for test = 1:3
+%		if (test == 1)		M_a = 0.29; M_b = 0.88; M_c = 0.0;
+%		elseif (test == 2) 	M_a = 0.29; M_b = 1.02; M_c = 0.0; 
+%		elseif (test == 3) 	M_a = 0.29; M_b = 1.50; M_c = 0.0; 
+%		end
 
 		global param;
 		param = zeros(17,1);

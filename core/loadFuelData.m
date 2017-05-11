@@ -5,5 +5,7 @@ function[data] = loadFuelData(fuel)
 		data = load('../data/lowStrain/lowStrain.CH4');
 	elseif (fuel == 3) % 
 		data = load('../data/lowStrain/lowStrain.H2');
+	elseif (fuel == 5) %ICSV
+		data = load('../data/lowStrain/lowStrain.CH4');
 	end
 end

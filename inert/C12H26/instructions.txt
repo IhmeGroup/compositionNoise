@@ -1,0 +1,27 @@
+Instructions to use the skeletal and reduced mechanisms
+ 
+Tianfeng Lu
+Email: tlu@engr.uconn.edu
+Department of Mechanical Engineering
+191 Auditorium Road U-3139
+Storrs, CT 06269
+Phone: (860) 486-3942
+Fax: (860) 486-5088
+ 
+Skeletal mechanisms
+The skeletal mechanisms can be used similarly to detailed mechanisms in CHEMKIN format.
+ 
+Reduced mechanisms
+The reduced mechanisms involve quasi steady state (QSS) species that are not listed in the mechanism. The QSS species will not appear in transport equations due to their low concentrations but need to be solved algebraically. Therefore users need to invoke a mechanism-specific CKWYP subroutine to compute the species production rates for a reduced mechanism.
+ 
+Users can follow the procedure below to revise a CHEMKIN-II compatible CFD code to include a reduced mechanism:
+1.      Use the files chem.inp, therm.dat, and tran.dat provided with the reduced mechanism to setup workspaces as if these files are from a detailed mechanism. If the CHEMKIN interpreter gives an error message that no reaction is contained in the mechanism, one can add a dummy reaction to the reaction list in chem.inp to trick the interpreter.
+2.      Replace the CKWYP subroutine in cklib.f, a CHEMKIN library, with the CKWYP subroutine provided with the reduced mechanism.
+3.      Search the CFD code to make sure no other rate evaluation subroutines from CHEMKIN (CKWYR, CKRAT, CKRATT, CKRATX, CKKFKR, CKKFRT etc) are called. In cases these subroutines are called, one can choose to either disable the related functions in the CFD code or to create customized versions for the reduced mechanism by slightly revising the corresponding subroutines in the CKWYP.F file with the reduced mechanism. In most CFD codes without sensitivity analysis and post analysis of reaction rates, only CKWYP needs to be used.
+ 
+To use a CFD code based on CHEMKIN 4 libraries (with source codes of the governing equations), one can rename the CKWYP subroutine with the reduced mechanism to something else, e.g. CKWYP_USER, and call the renamed function in the governing equation.
+ 
+To use the reduced mechanism with CHEMKIN 4 applications (without access to the source code), please consult with the CHEMKIN 4 user manual to convert the CKWYP subroutine with the reduced mechanism to a user defined function for rate evaluation.
+ 
+Thermo and transport data
+These files (therm.dat and tran.dat) are fully CHEMKIN compatible, not code revision is needed.

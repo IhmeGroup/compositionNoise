@@ -1,0 +1,530 @@
+function[] = plotter()
+	close all;
+	load('processedFlucs.mat');
+
+%	Flags
+	raw_signals				= false;
+	pressure_correction		= false;
+	probe_cleaning			= false;
+	final_spectra			= false;
+	plot_characteristics	= false;
+	plot_inlet_noise		= false;
+	plot_outlet_chars		= true;
+
+%	Parameters
+	L = 1;
+	gamma = 1.4;
+	gm1 = gamma - 1;
+	gm1o2 = gm1/2;
+	gogm1 = gamma/gm1;
+
+%	Nozzle entrance condition
+	Tbar_1 = mean(Tbar)
+	pbar_1 = mean(pbar)
+	rhobar_1 = mean(rhobar)
+	Psibar_1 = -21;
+	M_1 = 0.01;
+	M_2 = 1.5;
+	cbar_1 = sqrt(1.4*287*Tbar_1);
+	c_p = 1004;
+
+%	Stagnation condition
+	Tbar_0 = Tbar_1/(1 + gm1o2*M_1*M_1)^(-1);
+	pbar_0 = pbar_1/(1 + gm1o2*M_1*M_1)^(-gogm1);
+
+%	Nozzle exit condition
+	Tbar_2 = Tbar_0*(1 + gm1o2*M_2^2)^(-1)
+	pbar_2 = pbar_0*(1 + gm1o2*M_2^2)^(-gogm1)
+
+%	Plot the raw signals for evaluation
+	Y = length(pprobe);
+	t = linspace(0,N,N)'*dt;
+	if (raw_signals)
+		figure();
+		subplot(2,2,1);
+		plot(t, pprobe, 'LineWidth', 2);
+		xlabel('time [ms]');
+		ylabel('p_1 [Pa]');
+		set(gca, 'FontSize', 16);
+		subplot(2,2,2);
+		plot(t, rhoprobe, 'LineWidth', 2);
+		xlabel('time [ms]');
+		ylabel('$\rho_1 [kg/m^3]$', 'Interpreter', 'LaTeX');
+		set(gca, 'FontSize', 16);
+		subplot(2,2,3);
+		plot(t, vprobe, 'LineWidth', 2);
+		xlabel('time [ms]');
+		set(gca, 'FontSize', 16);
+		ylabel('$w [m/s]$', 'Interpreter', 'LaTeX');
+		subplot(2,2,4);
+		plot(t, Zprobe, 'LIneWidth', 2);
+		xlabel('time [ms]');
+		ylabel('$Z [-]$', 'Interpreter', 'LaTeX');
+		set(gca, 'FontSize', 16);
+	end%(raw_signals)
+
+%	Fit the pressure to a line, and then remove this linear trend from the signal
+	pfit = polyfit(t, pprobe, 1);
+	p_int = zeros(N,1);
+	p_cor = zeros(N,1);
+	for i = 1:N
+		p_int(i) = polyval(pfit, t(i));
+		p_cor(i) = pprobe(i) - p_int(i);
+	end
+	p_cor = p_cor - mean(p_cor);
+
+%	Make two plots to demonstrate the pressure correction procedure
+	if (pressure_correction)
+		figure();
+		plot(t, pprobe, 'b-', 'LineWidth', 2);
+		hold on;
+		plot(t, p_int, 'r--', 'LineWidth', 6);
+		xlabel('time [ms]');
+		ylabel('p [Pa]');
+		aa = legend('Raw signal', 'Linear trend');
+		set(aa, 'FontSize', 14);
+		set(gca, 'FontSize', 14);
+
+		figure();
+		plot(t, p_cor, 'b-', 'LineWidth', 2);
+		hold on;
+		xlabel('time [ms]');
+		ylabel('p [Pa]');
+		set(gca, 'FontSize', 14);
+	end
+	
+	[pprobe] = cleanProbes(t, p_cor, probe_cleaning);
+%	[sigma_probe] = cleanProbes(t, sigma_probe);
+	[wprobe] = cleanProbes(t, wprobe, probe_cleaning);
+	[rhoprobe] = cleanProbes(t, rhoprobe, probe_cleaning);
+	[Zprobe, t_smpl] = cleanProbes(t, Zprobe, probe_cleaning);
+	[N, Nprobes] = size(pprobe);
+	dt = 250*5E-8;
+	omega = 1/(N*dt)*[-N/2:N/2-1];
+	He = omega*L/cbar_1;;
+
+%	Build raw probe inputs
+%	Construct the entropy fluctuations
+	sigma_probe = -pprobe/(gamma*pbar_1) + rhoprobe/rhobar_1 + Psibar_1*Zprobe;
+%	Window the probes so that they look nice
+
+	p_DM = zeros(N,Nprobes);
+	p_MC = zeros(N,Nprobes);
+	s_DM = zeros(N,Nprobes);
+	s_MC = zeros(N,Nprobes);
+	z_DM = zeros(N,Nprobes);
+	z_MC = zeros(N,Nprobes);
+
+	if (plot_characteristics)
+		pstar_plot 			= figure();
+		set(pstar_plot, 'Position', [0 0 1500, 250]);
+		wstar_plot 		= figure();
+		set(wstar_plot, 'Position', [0 0 1500, 250]);
+		rhostar_plot	= figure();
+		set(rhostar_plot, 'Position', [0 0 1500, 250]);
+		Pseye_plot		= figure();
+		set(Pseye_plot, 'Position', [0 0 1500, 250]);
+		pi_plot 		= figure();
+		set(pi_plot, 'Position', [0 0 1500, 250]);
+		sigma_plot		= figure();
+		set(sigma_plot, 'Position', [0 0 1500, 250]);
+		xi_plot			= figure();
+		set(xi_plot, 'Position', [0 0 1500, 250]);
+	end%plot_characteristics
+
+	for probe = 1:Nprobes
+		p1_star(:,probe) 	= pprobe(:,probe)/(gamma*pbar_1);
+		w1_star(:,probe) 	= wprobe(:,probe)/cbar_1;
+		rho1_star(:,probe)	= rhoprobe(:,probe)/rhobar_1;
+		Pseye1(:,probe)		= Zprobe(:,probe).*Psibar_1;
+
+		pi_plus1(:,probe) 	= 0.5*(p1_star(:,probe) + w1_star(:,probe));
+		sigma1(:,probe)		= rho1_star(:,probe) - p1_star(:,probe) - Pseye1(:,probe);
+		xi1(:,probe)		= Zprobe(:,probe);
+
+		if (plot_characteristics)
+			figure(pstar_plot);
+			subplot(1,7,probe);
+			plot(t_smpl(:,probe),p1_star(:,probe), 'LineWidth', 2);
+			xlabel('Time [ms]');
+			if (probe == 1)
+				ylabel('$p^* \slash \gamma \bar{p}_a$', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)), max(t_smpl(:,probe))]);
+			set(gca, 'FontSize', 14);
+
+			figure(wstar_plot);
+			subplot(1,7,probe);
+			plot(t_smpl(:,probe),w1_star(:,probe), 'LineWidth', 2);
+			xlabel('Time [ms]');
+			if (probe == 1)
+				ylabel('$w^* \slash \bar{c}_a$', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)), max(t_smpl(:,probe))]);
+			set(gca, 'FontSize', 14);
+
+			figure(pi_plot);
+			subplot(1,7,probe);
+			plot(t_smpl(:,probe),pi_plus1(:,probe), 'LineWidth', 2);
+			xlabel('Time [ms]');
+			if (probe == 1)
+				ylabel('$\pi^+_a$', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)), max(t_smpl(:,probe))]);
+			set(gca, 'FontSize', 14);
+
+			figure(rhostar_plot);
+			subplot(1,7,probe);
+			plot(t_smpl(:,probe),rho1_star(:,probe), 'LineWidth', 2);
+			xlabel('Time [ms]');
+			if (probe == 1)
+				ylabel('$\rho^* \slash \bar{\rho}_1$', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)), max(t_smpl(:,probe))]);
+			set(gca, 'FontSize', 14);
+
+			figure(Pseye_plot);
+			subplot(1,7,probe);
+			plot(t_smpl(:,probe),Pseye1(:,probe), 'LineWidth', 2);
+			xlabel('Time [ms]');
+			if (probe == 1)
+				ylabel('$\bar{\Psi}_a \xi^*$', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)), max(t_smpl(:,probe))]);
+			set(gca, 'FontSize', 14);
+
+			figure(sigma_plot);
+			subplot(1,7,probe);
+			plot(t_smpl(:,probe),sigma1(:,probe), 'LineWidth', 2);
+			xlabel('Time [ms]');
+			if (probe == 1)
+				ylabel('$\sigma_a$', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)), max(t_smpl(:,probe))]);
+			set(gca, 'FontSize', 14);
+
+			figure(xi_plot);
+			subplot(1,7,probe);
+			plot(t_smpl(:,probe),xi1(:,probe), 'LineWidth', 2);
+			xlabel('Time [ms]');
+			if (probe == 1)
+				ylabel('$\xi_a$', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)), max(t_smpl(:,probe))]);
+			set(gca, 'FontSize', 14);
+		end%plot_characteristics
+	end%probe = 1:Nprobes
+	if (plot_characteristics)
+		tightfig(pstar_plot);
+		tightfig(wstar_plot);
+		tightfig(rhostar_plot);
+		tightfig(Pseye_plot);
+		tightfig(xi_plot);
+		tightfig(sigma_plot);
+		tightfig(pi_plot);
+	end%(plot_characteristics)
+
+	if (plot_inlet_noise)
+		a1 = figure();
+		set(a1, 'Position', [ 0 0 1500 250]);	
+		a2 = figure();
+		set(a2, 'Position', [ 0 0 1500 250]);	
+		a3 = figure();
+		set(a3, 'Position', [ 0 0 1500 250]);	
+	end
+
+	N = length(pprobe(:,1));
+	omega_smpl = 1/(N*dt)*[-N/2:N/2-1];
+	for probe = 1:Nprobes
+		pprobe_hat(:,probe) = fftshift(fft(pprobe(:,probe)));
+		pprobe_hat(N/2+1,probe) = NaN;
+		SPL_1_hat(:,probe) = 10*log10((pprobe_hat(:,probe)/20E-6).*conj(pprobe_hat(:,probe)/20E-6))/sqrt(2);
+		SPL_1_hat(N/2+1,probe) = NaN;
+		if (plot_inlet_noise)
+			figure(a1);
+			subplot(1,8,probe);
+			plot(t_smpl(:,probe), pprobe(:,probe),'LineWidth', 2);
+			title(strcat('Sample #', num2str(probe)));
+			xlabel('t [ms]');
+			set(gca, 'FontSize', 16);
+			if (probe == 1)
+				ylabel('$p$ [Pa]', 'Interpreter', 'LaTeX');
+			end
+			xlim([min(t_smpl(:,probe)) max(t_smpl(:,probe))]);
+
+			figure(a2);
+			subplot(1,8,probe);
+			semilogy(omega_smpl, abs(pprobe_hat(:,probe)), 'LineWidth', 2);
+			title(strcat('Sample #', num2str(probe)));
+			xlabel('f [Hz]');
+			xlim([-2000,2000]);
+			ylim([1E3, 1E6]);
+			set(gca, 'FontSize', 16);
+			if (probe == 1)
+				ylabel('$\hat{p}$ [Pa-Hz]', 'Interpreter', 'LaTeX');
+			end
+
+			figure(a3);
+			subplot(1,8,probe);
+			plot(omega_smpl, SPL_1_hat(:,probe), 'LineWidth', 2);
+			title(strcat('Sample #', num2str(probe)));
+			set(gca, 'FontSize', 16);
+			xlabel('f [Hz]');
+			ylim([110,150]);
+			xlim([-2000,2000]);
+			if (probe == 1)
+				ylabel('SPL [dB]', 'Interpreter', 'LaTeX');
+			end
+		end%(plot_inlet_noise)
+	end
+
+	pprobe_hat_bar = mean(abs(pprobe_hat)');
+	SPL_1_hat_bar = mean(SPL_1_hat')';
+
+	if (plot_inlet_noise)
+		figure(a1);
+		set(gca ,'FontSize', 16);
+		tightfig();
+
+		figure(a2);
+		subplot(1,8,8);
+		semilogy(omega_smpl, pprobe_hat_bar, 'LineWidth', 2);
+		xlabel('f [Hz]');
+		xlim([-2000,2000]);
+		ylim([1E3, 1E6]);
+		set(gca ,'FontSize', 16);
+		title('Average Respone');
+		tightfig();
+
+		figure(a3);
+		subplot(1,8,8);
+		plot(omega_smpl, SPL_1_hat_bar, 'LineWidth', 2);
+		xlabel('f [Hz]');
+		xlim([-2000,2000]);
+		set(gca, 'FontSize', 16);
+		title('Average Response');
+		tightfig();
+	end%plot_inlet_noise
+
+
+
+%	Loop over all the probes and apply the model
+	for probe = 1:Nprobes
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%				DIRECT NOISE				  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		Build the dimensional perturbation for downstream comparison
+
+		p_1_hat_amp = abs(fftshift(fft(pprobe(:,probe))));
+	
+%		Build the dimensionless perturbation to feed into the model
+		PEE_1 = pprobe(:,probe)/(gamma*pbar_1);																% non-dimensionalize
+		PEE_1_hat = fftshift(fft(PEE_1));															% Fourier transform
+		PEE_1_hat_amp = sqrt(real(PEE_1_hat).*real(PEE_1_hat) + imag(PEE_1_hat).*imag(PEE_1_hat));	% Take the two norm of this	
+
+%		Load the data from the Helmholtz dependent solver
+		load('Acoustic.mat')									% Load data
+		OMEGA = OMEGA';											% Force column vectors
+		modulusTransferFn = abs(TRANS(:,1));					% Peel off the downstream acoustic transfer function from the TRANS array
+		phaseTransferFn = PHASE(:,1);							% Peel off the downstream acoustic transfer function from the PHASE array
+		modulus = spline(OMEGA, modulusTransferFn);				% Spline the transfer function modulus to allow for continuous queries
+		phase = spline(OMEGA, phaseTransferFn);					% Spline the transfer function phase to allow for continuous queries
+
+%		Allocate some arrays
+		PEE_2_hat_amp_DM	= zeros(N,1);						% Store the dimensionless downstream pressure wave computed with Duran-Moreau style model
+		PEE_2_hat_amp_MC	= zeros(N,1);						% Store the dimensionless downstream pressure wave computed with Marble-Candel style model
+		p_2_hat_amp_DM 		= zeros(N,1);						% Store the dimensional downstream pressure wave computed with Duran-Moreau style model
+		p_2_hat_amp_MC 		= zeros(N,1);						% Store the dimensional downstream pressure wave computed with Marble-Candel style model
+
+%		Apply the transfer functions to the incoming data			
+		for i = 1:N
+			if (abs(He(i)) < 2)													% Only act on waves w He < 2
+				PEE_2_hat_amp_DM(i) = PEE_1_hat_amp(i)*ppval(modulus, He(i));	% Stretch the modulus by the appropriate factor for current He
+				PEE_2_hat_amp_MC(i)	= PEE_1_hat_amp(i)*ppval(modulus, 0);		% Stretch the modulus by the factor for He = 0
+				p_2_hat_amp_DM(i) 	= PEE_2_hat_amp_DM(i)*gamma*pbar_2;			% Scale the dimensionless output to make it dimensional MC		
+				p_2_hat_amp_MC(i) 	= PEE_2_hat_amp_MC(i)*gamma*pbar_2;			% Scale the dimensionless output to make it dimensional DM	
+			end
+		end
+
+%		Compute SPL from pressure fluctuation levels	
+		p_2_hat_amp_DM 	= p_2_hat_amp_DM/20E-6;											% Scale the pressure fluctuation by p_0 DM
+		p_2_hat_amp_MC 	= p_2_hat_amp_MC/20E-6;										% Scale the pressure fluctuation by p_0 MC
+		p_1_hat_amp 	= p_1_hat_amp/20E-6;											% Scale the inlet pressure fluctuation by p_0
+		SPL_1_hat 		= 10*log10((p_1_hat_amp).*conj(p_1_hat_amp))/sqrt(2);			% Apply the SPL definition to inlet pressure
+		SPL_2_hat_DM 	= 10*log10((p_2_hat_amp_DM).*conj(p_2_hat_amp_DM))/sqrt(2);		% Apply the SPL definition to DM pressure
+		SPL_2_hat_MC	= 10*log10((p_2_hat_amp_MC).*conj(p_2_hat_amp_MC))/sqrt(2);		% Apply the SPL definition to MC pressure
+		SPL_1_hat(N/2+1) 	= NaN;														% Null out the mean for aesthetics inlet
+		SPL_2_hat_DM(N/2+1)	= NaN;														% Null out the mean for aesthetics DM
+		SPL_2_hat_MC(N/2+1) = NaN;														% Null out the mean for aesthetics MC
+
+		p_DM(:,probe) = SPL_2_hat_DM;
+		p_MC(:,probe) = SPL_2_hat_MC;
+
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%				ENTROPY NOISE				  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		Build the dimensionless perturbation to feed into the model
+		SIGMA_1 = sigma_probe;
+		SIGMA_1_hat = fftshift(fft(SIGMA_1));
+		SIGMA_1_hat_amp = sqrt(real(SIGMA_1_hat).*real(SIGMA_1_hat) + imag(SIGMA_1_hat).*imag(SIGMA_1_hat));	% Take the two norm of this	
+
+%		Load the data from the Helmholtz dependent solver
+		load('Entropy.mat')										% Load data
+		OMEGA = OMEGA';											% Force column vectors
+		modulusTransferFn = abs(TRANS(:,1));					% Peel off the downstream acoustic transfer function from the TRANS array
+		phaseTransferFn = PHASE(:,1);							% Peel off the downstream acoustic transfer function from the PHASE array
+		modulus = spline(OMEGA, modulusTransferFn);				% Spline the transfer function modulus to allow for continuous queries
+		phase = spline(OMEGA, phaseTransferFn);					% Spline the transfer function phase to allow for continuous queries
+
+%		Allocate some arrays
+		PEE_2_hat_amp_DM	= zeros(N,1);						% Store the dimensionless downstream pressure wave computed with Duran-Moreau style model
+		PEE_2_hat_amp_MC	= zeros(N,1);						% Store the dimensionless downstream pressure wave computed with Marble-Candel style model
+		p_2_hat_amp_DM 		= zeros(N,1);						% Store the dimensional downstream pressure wave computed with Duran-Moreau style model
+		p_2_hat_amp_MC 		= zeros(N,1);						% Store the dimensional downstream pressure wave computed with Marble-Candel style model
+
+%		Apply the transfer functions to the incoming data			
+		for i = 1:N
+			if (abs(He(i)) < 2)													% Only act on waves w He < 2
+				PEE_2_hat_amp_DM(i) = SIGMA_1_hat_amp(i)*ppval(modulus, He(i));	% Stretch the modulus by the appropriate factor for current He
+				PEE_2_hat_amp_MC(i)	= SIGMA_1_hat_amp(i)*ppval(modulus, 0);		% Stretch the modulus by the factor for He = 0
+				p_2_hat_amp_DM(i) 	= PEE_2_hat_amp_DM(i)*gamma*pbar_2;			% Scale the dimensionless output to make it dimensional MC		
+				p_2_hat_amp_MC(i) 	= PEE_2_hat_amp_MC(i)*gamma*pbar_2;			% Scale the dimensionless output to make it dimensional DM	
+			end
+		end
+
+%		Compute SPL from pressure fluctuation levels	
+		p_2_hat_amp_DM 	= p_2_hat_amp_DM/20E-6;											% Scale the pressure fluctuation by p_0 DM
+		p_2_hat_amp_MC 	= p_2_hat_amp_MC/20E-6;											% Scale the pressure fluctuation by p_0 MC
+		SPL_2_hat_DM 	= 10*log10((p_2_hat_amp_DM).*conj(p_2_hat_amp_DM))/sqrt(2);		% Apply the SPL definition to DM pressure
+		SPL_2_hat_MC	= 10*log10((p_2_hat_amp_MC).*conj(p_2_hat_amp_MC))/sqrt(2);		% Apply the SPL definition to MC pressure
+		SPL_2_hat_DM(N/2+1)	= NaN;														% Null out the mean for aesthetics DM
+		SPL_2_hat_MC(N/2+1) = NaN;														% Null out the mean for aesthetics MC
+
+		s_DM(:,probe) = SPL_2_hat_DM;
+		s_MC(:,probe) = SPL_2_hat_MC;
+	
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%			COMPOSITION NOISE				  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%		Build the dimensionless perturbation to feed into the model
+		ZEE_1 = Zprobe;
+		ZEE_1_hat = fftshift(fft(ZEE_1));
+		ZEE_1_hat_amp = sqrt(real(ZEE_1_hat).*real(ZEE_1_hat) + imag(ZEE_1_hat).*imag(ZEE_1_hat));	% Take the two norm of this	
+
+%		Load the data from the Helmholtz dependent solver
+		load('Composition.mat')									% Load data
+		OMEGA = OMEGA';											% Force column vectors
+		modulusTransferFn = abs(TRANS(:,1));					% Peel off the downstream acoustic transfer function from the TRANS array
+		phaseTransferFn = PHASE(:,1);							% Peel off the downstream acoustic transfer function from the PHASE array
+		modulus = spline(OMEGA, modulusTransferFn);				% Spline the transfer function modulus to allow for continuous queries
+		phase = spline(OMEGA, phaseTransferFn);					% Spline the transfer function phase to allow for continuous queries
+	
+%		Allocate some arrays
+		PEE_2_hat_amp_DM	= zeros(N,1);						% Store the dimensionless downstream pressure wave computed with Duran-Moreau style model
+		PEE_2_hat_amp_MC	= zeros(N,1);						% Store the dimensionless downstream pressure wave computed with Marble-Candel style model
+		p_2_hat_amp_DM 		= zeros(N,1);						% Store the dimensional downstream pressure wave computed with Duran-Moreau style model
+		p_2_hat_amp_MC 		= zeros(N,1);						% Store the dimensional downstream pressure wave computed with Marble-Candel style model
+
+%		Apply the transfer functions to the incoming data			
+		for i = 1:N
+			if (abs(He(i)) < 2)													% Only act on waves w He < 2
+				PEE_2_hat_amp_DM(i) = ZEE_1_hat_amp(i)*ppval(modulus, He(i));	% Stretch the modulus by the appropriate factor for current He
+				PEE_2_hat_amp_MC(i)	= ZEE_1_hat_amp(i)*ppval(modulus, 0);		% Stretch the modulus by the factor for He = 0
+				p_2_hat_amp_DM(i) 	= PEE_2_hat_amp_DM(i)*gamma*pbar_2;			% Scale the dimensionless output to make it dimensional MC		
+				p_2_hat_amp_MC(i) 	= PEE_2_hat_amp_MC(i)*gamma*pbar_2;			% Scale the dimensionless output to make it dimensional DM	
+			end
+		end
+
+%		Compute SPL from pressure fluctuation levels	
+		p_2_hat_amp_DM 	= p_2_hat_amp_DM/20E-6;											% Scale the pressure fluctuation by p_0 DM
+		p_2_hat_amp_MC 	= p_2_hat_amp_MC/20E-6;										% Scale the pressure fluctuation by p_0 MC
+		p_1_hat_amp 	= p_1_hat_amp/20E-6;											% Scale the inlet pressure fluctuation by p_0
+		SPL_1_hat 		= 10*log10((p_1_hat_amp).*conj(p_1_hat_amp))/sqrt(2);			% Apply the SPL definition to inlet pressure
+		SPL_2_hat_DM 	= 10*log10((p_2_hat_amp_DM).*conj(p_2_hat_amp_DM))/sqrt(2);		% Apply the SPL definition to DM pressure
+		SPL_2_hat_MC	= 10*log10((p_2_hat_amp_MC).*conj(p_2_hat_amp_MC))/sqrt(2);		% Apply the SPL definition to MC pressure
+		SPL_1_hat(N/2+1) 	= NaN;														% Null out the mean for aesthetics inlet
+		SPL_2_hat_DM(N/2+1)	= NaN;														% Null out the mean for aesthetics DM
+		SPL_2_hat_MC(N/2+1) = NaN;														% Null out the mean for aesthetics MC
+
+		z_DM(:,probe) = SPL_2_hat_DM;
+		z_MC(:,probe) = SPL_2_hat_MC;
+	end%for probe
+
+	s_DM = mean(s_DM')';
+	s_MC = mean(s_MC')';
+	p_DM = mean(p_DM')';
+	p_MC = mean(p_MC')';
+	z_DM = mean(z_DM')';
+	z_MC = mean(z_MC')';
+
+	if (final_spectra)
+%		Plot the damn thing	
+		h2 = figure();																	% Generate the figure holder
+		set(h2, 'Position', [ 0 0 600 425]);											% Size the figure holder so it looks good in publication
+		plot(He, p_MC, 'b-', 'LineWidth', 2);									% Plot the acoustically compact result
+		hold on;
+		plot(He, p_DM, 'g-', 'LineWidth', 2);									% Plot the acoustically noncompact result
+																					% Plot the LEE result
+		title('Direct Noise');															% Titles for now to avoid confusion
+		set(gca ,'FontSize', 16, 'FontName', 'Times');									% Plot formatting
+		xlabel('$He$ [-]', 'Interpreter', 'LaTeX');										% Horizontal axis is Helmholtz No
+		ylabel('SPL [dB]', 'Interpreter', 'LaTeX');										% Vertical axis is SPL
+		xlim([0, 2]);																	% Limit to relatively low frequency results
+		ylim([60,150]);
+		g = legend('Compact', 'Noncompact', 'LEE');										% Label the curves to avoid confusion
+		set(g, 'FontSize', 16, 'FontName', 'Times');
+	
+		h3 = figure();
+		set(h3, 'Position', [ 0 0 600 425]);
+		plot(He, s_MC, 'b-', 'LineWidth', 2);									% Plot the acoustically compact result
+		hold on;
+		plot(He, s_DM, 'g-', 'LineWidth', 2);									% Plot the acoustically noncompact result
+		title('Entropy Noise');
+		set(gca ,'FontSize', 16, 'FontName', 'Times');
+		xlabel('$He$ [-]', 'Interpreter', 'LaTeX');
+		ylabel('SPL [dB]', 'Interpreter', 'LaTeX');
+		xlim([0, 2]);																	% Limit to relatively low frequency results
+		ylim([60,150]);
+		g = legend('Compact', 'Noncompact', 'LEE');										% Label the curves to avoid confusion
+		set(g, 'FontSize', 16, 'FontName', 'Times');
+
+		h4 = figure();
+		set(h4, 'Position', [ 0 0 600 425]);
+		plot(He, z_MC, 'b-', 'LineWidth', 2);									% Plot the acoustically compact result
+		hold on;
+		plot(He, z_DM, 'g-', 'LineWidth', 2);									% Plot the acoustically noncompact result
+		title('Composition Noise');
+		set(gca ,'FontSize', 16, 'FontName', 'Times');
+		xlabel('$He$ [-]', 'Interpreter', 'LaTeX');
+		ylabel('SPL [dB]', 'Interpreter', 'LaTeX');
+		xlim([0, 2]);																	% Limit to relatively low frequency results
+		ylim([60,150]);
+		g = legend('Compact', 'Noncompact', 'LEE');										% Label the curves to avoid confusion
+		set(g, 'FontSize', 16, 'FontName', 'Times');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%				  TOTAL NOISE				  %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+		h1 = figure();
+		set(h1, 'Position', [ 0 0 600 425]);
+		title('Total Noise');
+		set(gca ,'FontSize', 16, 'FontName', 'Times');
+		xlabel('$He$ [-]', 'Interpreter', 'LaTeX');
+		ylabel('SPL [dB]', 'Interpreter', 'LaTeX');
+	end%(final_spectra)
+
+
+end

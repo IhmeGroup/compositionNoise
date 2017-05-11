@@ -22,9 +22,9 @@ function[] = plotValidationData()
 	ylabel('$|\pi_b^+ \slash \pi_a^+|$', 'FontSize', 18, 'FontName', 'Times', 'Interpreter','LaTeX');
 	title('$(a)$', 'FontSize', 18, 'FontName', 'Times', 'FontWeight', 'Normal','Interpreter', 'LaTeX');
 	set(gca, 'FontSize', 18, 'FontName', 'Times');
-	set(gca, 'XTick', 0:0.4:2.0, 'YTick', 0:0.1:0.9);
+%	set(gca, 'XTick', 0:0.4:2.0, 'YTick', 0:0.1:0.9);
 	xlim([0 2]);
-	ylim([1.1, 1.4]);
+%	ylim([1.1, 1.4]);
 	grid on;
 	plot([OMEGA(1), OMEGA(length(OMEGA))], [abs(TRANS(1,1,1)), abs(TRANS(1,1,1))], 'b--', 'LineWidth', lw); 
 	plot([OMEGA(1), OMEGA(length(OMEGA))], [abs(TRANS(2,1,1)), abs(TRANS(2,1,1))], 'r--', 'LineWidth', lw); 

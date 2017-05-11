@@ -1,0 +1,7 @@
+rm AcousticTransferFunction.pdf
+rm EntropicTransferFunction.pdf
+rm CompositionTransferFunction.pdf
+
+convert AcousticTransferFunction.eps AcousticTransferFunction.pdf
+convert EntropicTransferFunction.eps EntropicTransferFunction.pdf
+convert CompositionTransferFunction.eps CompositionTransferFunction.pdf

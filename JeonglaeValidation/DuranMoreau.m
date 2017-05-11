@@ -96,7 +96,7 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		plot_invariants			= false;
 	else
 		close all;
-		plot_background			= true;
+		plot_background			= false;
 		plot_primitives 		= true;
 		plot_characteristics 	= true;
 		plot_invariants			= true;
@@ -108,7 +108,10 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		shocked = false;
 	else
 		subsonic = false;
-		if (M_c == 0)
+		if (M_a > 1)
+			supersonic = true;
+			choked = false;
+		elseif (M_c == 0)
 			choked = true;
 		else
 			shocked = false;
@@ -232,7 +235,33 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		I_2 = [I_2, supsol.y(2,:)];
 		I_3 = [I_3, supsol.y(3,:)];
 		I_4 = [I_4, supsol.y(4,:)];
+	elseif (supersonic)
+		disp('The flow is supersonic');
+%		Compute the eta bounds (see appendix of Duran & Moreau) for the subsonic problem
+		if (beta == -2)%LinVelGrad
+			etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
+		else
+			etabounds = [-1,-epsilon];
+		end
 
+		w_m_a = 0;
+		param = [M_a; 	M_b; 	M_c;	gamma; 	Omega; 	T0;		p0;		Zbar; 	w_p_a; 	w_m_a; 	w_s_a; 	w_z_a; 	w_p_b; 	w_m_b; 	w_s_b; 	w_z_b; 	L];
+%		Initialize the BVP, values shouldn't matter
+		if (~exist('subsol', 'var'))
+			subsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N1), [0.5 0.5 0.5 0.5]);
+		end
+		if (~exist('supsol', 'var'))
+			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [0.5 0.5 0.5 0.5]);
+		end
+
+%		Solve the bvp
+		supsol 	= bvp4c(@DuranMoreauODE, @JustSupersonicBCs, supsol, options);
+%		Unpack the solution
+		eta = subsol.x;		%spatial coordinate
+		I_1 = supsol.y(1,:);	%mass
+		I_2 = supsol.y(2,:);	%enthalpy
+		I_3 = supsol.y(3,:);	%entropy
+		I_4 = supsol.y(4,:);	%composition
 	elseif (shocked)
 %		Shocked solution would go here...	
 	end
@@ -360,7 +389,7 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 	end%(plot_characteristics)
 
 
-	if (1 == 1)
+	if (1 == 2)
 		figure();
 		plot(eta, Pseye, 'b', 'LineWidth', 2);
 		xlabel('$\eta$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');

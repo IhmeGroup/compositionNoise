@@ -94,24 +94,37 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		plot_primitives 		= false;
 		plot_characteristics 	= false;
 		plot_invariants			= false;
+		plot_psi				= false;
 	else
 		close all;
 		plot_background			= true;
 		plot_primitives 		= true;
 		plot_characteristics 	= true;
 		plot_invariants			= true;
+		plot_psi				= true;
 	end
 
 	if (M_b < 1)
 		subsonic = true;
 		choked = false;
 		shocked = false;
+		supersonic = false;
 	else
 		subsonic = false;
-		if (M_c == 0)
-			choked = true;
+		if (M_a < 1)
+			supersonic = false;
+			if (M_c == 0)
+				choked = true;
+			else
+				shocked = false;
+			end
 		else
-			shocked = false;
+			supersonic = true;
+			if (M_c == 0)
+				choked = false;
+			else
+				choked = true;
+			end
 		end
 	end
 
@@ -144,6 +157,29 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		I_2 = subsol.y(2,:);	%enthalpy
 		I_3 = subsol.y(3,:);	%entropy
 		I_4 = subsol.y(4,:);	%composition
+	elseif (supersonic)
+		disp('The flow is supersonic');
+%		Compute the eta bounds (see appendix of Duran & Moreau) for the subsonic problem
+		if (beta == -2)%LinVelGrad
+			etabounds = [sqrt(gp1/2*M_a*M_a/(1+gm1o2*M_a*M_a)) sqrt(gp1/2*M_b*M_b/(1+gm1o2*M_b*M_b))];
+		else
+			etabounds = [-1,-epsilon];
+		end
+
+%		Initialize the BVP, values shouldn't matter
+		if (~exist('supsol', 'var'))
+			supsol 	= bvpinit(linspace(etabounds(1), etabounds(2), N2), [0.5 0.5 0.5 0.5]);
+		end
+
+%		Solve the bvp
+		supsol 	= bvp4c(@DuranMoreauODE, @SupersonicBCs, supsol, options);
+		subsol = 0;
+%		Unpack the solution
+		eta = supsol.x;		%spatial coordinate
+		I_1 = supsol.y(1,:);	%mass
+		I_2 = supsol.y(2,:);	%enthalpy
+		I_3 = supsol.y(3,:);	%entropy
+		I_4 = supsol.y(4,:);	%Mixture Fraction
 	elseif (choked)
 		disp('The flow is choked but shock free');
 %		First pass (inlet -> throat)
@@ -258,8 +294,10 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 %		Tee = (1 + gm1o2*M*M)^(-1)*T0;
 %		Pseye = returnPsi(Tee, pee, Zbar);
 		M = ppval(M_sp, eta(i));
+		EM(i) = M;
 		alpha = 1/(1 + gm1o2*M*M);%pre-computed for convenience
 		Pseye = ppval(Psibar_sp, eta(i));
+		psi(i) = Pseye;
 		
 
 %		Map the invariants to the normalized perturbations s
@@ -298,6 +336,14 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		ylabel('$M$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
 		set(gca, 'FontSize', 14, 'FontName', 'Times');
 	end%(plot_primtives
+
+	if (plot_background)
+		figure();
+		plot((eta- min(eta))/(max(eta) - min(eta)), EM, 'b', 'LineWidth', 2);
+		xlabel('$x$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
+		ylabel('$M$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
+		set(gca, 'FontSize', 14, 'FontName', 'Times');
+	end
 	
 %	Invariants vs. spatial coordinate
 	if (plot_invariants)
@@ -355,6 +401,14 @@ function[transfer, subsol, supsol, eta, w_p, w_m, w_s, w_z, SPLINES] = DuranMore
 		ylabel('Phase($w_i$)', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
 		set(gca, 'FontSize', 14, 'FontName', 'Times');
 	end%(plot_characteristics)
+
+	if (plot_psi)
+		figure();
+		plot(eta, psi, 'b', 'linewidth', 2);
+		xlabel('$\eta$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
+		ylabel('$\Psi$', 'Interpreter', 'LaTeX', 'FontSize', 14, 'FontName', 'Times');
+		set(gca, 'FontSize', 14, 'FontName', 'Times');
+	end%(plot_psi)
 
 %	Compute the transfer matrix by storing the values at each end of the solution into the matrix transfer
 	transfer = [w_p(1) w_p(end); w_m(1) w_m(end); w_s(1) w_s(end); w_z(1) w_z(end)];

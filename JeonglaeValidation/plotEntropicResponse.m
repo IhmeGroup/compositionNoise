@@ -24,7 +24,7 @@ function[] = plotValidationData()
 	title('$(a)$', 'FontSize', 18, 'FontName', 'Times', 'FontWeight', 'Normal','Interpreter', 'LaTeX');
 	set(gca, 'FontSize', 18, 'FontName', 'Times');
 	xlim([0 2]);
-	ylim([0, 0.6]);
+%	ylim([0, 0.6]);
 	grid on;
 	plot([OMEGA(1), OMEGA(length(OMEGA))], [abs(TRANS(1,1,1)), abs(TRANS(1,1,1))], 'b--', 'LineWidth', lw); 
 	plot([OMEGA(1), OMEGA(length(OMEGA))], [abs(TRANS(2,1,1)), abs(TRANS(2,1,1))], 'r--', 'LineWidth', lw); 

@@ -1,6 +1,6 @@
-function[cp, h, s, g] = returnSpeciesProperties(T, p, Y, a, A, MW)
+function[cp, h, s, g, h0, gamma] = returnSpeciesProperties(T, p, Y, a, A, MW, Hover)
 %	This is a function that emulates CHEMKIN, returning species properties as a function of thermodynamic state, composition, NASA polynomials (a and A) and molecular weight (MW)
-	R_univ = 8.31446E7;
+	R_univ = 8.31446;
 	T2 = power(T,2);
 	T3 = power(T,3);
 	T4 = power(T,4);
@@ -10,7 +10,8 @@ function[cp, h, s, g] = returnSpeciesProperties(T, p, Y, a, A, MW)
 	cpvec = zeros(Nspecies, 1);
 	hvec = zeros(Nspecies, 1);
 	svec = zeros(Nspecies, 1);
-	smix = 0;
+	MW_bar	= 1./sum(Y./MW);
+			p_bar_p_0	= p/1E5;
 	for i = 1:Nspecies
 		if (T >= 1000) 
 			cpvec(i) 	=       a(i,1) +      T.*a(i,2) +      T2.*a(i,3) +      T3.*a(i,4) +      T4.*a(i,5);
@@ -23,15 +24,21 @@ function[cp, h, s, g] = returnSpeciesProperties(T, p, Y, a, A, MW)
 		end
 		cpvec(i) 	= cpvec(i)*R_univ/MW(i);
 		hvec(i)		= hvec(i)*R_univ/MW(i)*T;
-		if (Y(i) >  1E-61)
-%			svec(i) 	= svec(i)*(R_univ/MW(i)) - R_univ/MW(i)*log(Y(i)*p/1E6);
-			svec(i) 	= svec(i)*(R_univ/MW(i)) - R_univ/MW(i)*log(Y(i)*p/1E5);
+%		Following the mixing rule explained in 11.16-11.17 of Borgnakke and Sonntag
+%		S = m_a*s_a + m_b*s_b
+%		s_i = s_o,i + c_p*log(T/T_o) - R_i*log(p_i/p_o)
+%		where the first two terms are baked into svec and the pressure adjustment is applied below
+		if (Y(i) >  1E-61)%Trying to avoid the singularity associated with log(0)
+			p_i_p_bar 	= Y(i)*MW_bar/MW(i);
+			svec(i) 	= svec(i)*R_univ/MW(i) - R_univ/MW(i)*log(p_i_p_bar*p_bar_p_0);
+		else
+			svec(i)		= 0;
 		end
 	end
-	myR = R_univ./MW;
 	cp 	= dot(cpvec, Y);
 	h	= dot(hvec, Y);
-%	      Normal Enthalpy [s0(t)] &  Mixing Rule referenced to one bar (in cgs);
-	s	= dot(svec, Y)            -  smix;
+	s	= dot(svec, Y);
 	g = h - T*s;
+	h0 = dot(Y,Hover./MW.*R_univ);
+	gamma = cp/(cp - R_univ/MW_bar);	
 end%returnSpeciesProperties()

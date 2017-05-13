@@ -1,4 +1,4 @@
-function[psi, gctr, gammactr, aleph, phi] = returnPsi(Tbar, pbar, Zbar)
+function[gammactr] = returnGamma(Tbar, pbar, Zbar)
 %	Returns the normalized chemical potential and (gibbs free energy, if desired) as a function of mean temperature, pressure, and composition
 	global data mechanism a A MW Hover;
 
@@ -39,17 +39,5 @@ function[psi, gctr, gammactr, aleph, phi] = returnPsi(Tbar, pbar, Zbar)
 	end
 
 %	Obtain the gibbs free energies at either side of Zbar, and the specific heat at Zbar
-	[~, ~, ~, glft, h0lft, gammalft] = returnSpeciesProperties(Tbar, pbar, Ylft, a, A, MW, Hover);
 	[cp, ~, ~, gctr, h0ctr, gammactr]	= returnSpeciesProperties(Tbar, pbar, Yctr, a, A, MW, Hover);
-	[~, ~, ~, grgt, h0rgt, gammargt] = returnSpeciesProperties(Tbar, pbar, Yrgt, a, A, MW, Hover);
-
-%	Compute the gradient of the Gibbs free energy at Zbar
-	dGdZ = (grgt - glft)/(Zrgt - Zlft);
-
-%	Return the value of psi
-	psi = 1/(cp*Tbar)*dGdZ;
-
-%	Return null arguments for now	
-	alpeph 	= 0;
-	phi 	= 0;
 end

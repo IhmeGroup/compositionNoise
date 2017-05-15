@@ -1,9 +1,12 @@
-function[w, s] = charsFromInvrnts(eta, I, SPLINES)
+function[w, s] = charsFromInvrnts(eta, I, flaggo,SPLINES)
 	[gamma] = returnAmbientState();
 
-	if exist('SPLINES')
+	if (flaggo == 0)
 		M			= ppval(SPLINES(1), eta);
 		Psibar		= ppval(SPLINES(4), eta);
+	elseif (flaggo == 1)
+		M			= MFromEtaLVG(eta, SPLINES);
+		[Psibar] 	= BaseFlowFromMLVG(eta);
 	else
 		error('Add MfromA stuff here');	
 	end
@@ -28,8 +31,8 @@ function[w, s] = charsFromInvrnts(eta, I, SPLINES)
 %	The characteristics w = (pi^+, pi^-, sigma, xi) are related to the normalized perturbation quantities s by the matrix R
 	R = [1 	M 	0	0;
 	   	 1 -M 	0 	0;
-		 0	0		1	0;
-		 0	0		0	1];
+		 0	0	1	0;
+		 0	0	0	1];
 
 	w = R*s;
 end

@@ -1,20 +1,25 @@
-function[Res] = ChokedBCs(I_a, I_b, w_l, w_r, eta_l, eta_r, SPLINES)
-
+function[Res] = ChokedBCs(I_a, I_b, w_l, w_r, eta_l, eta_r, flaggo, SPLINES)
+%	Boundary conditions for subsonic flows
+%
 %	Unpack the parameter vector
 	[gamma] = returnAmbientState();
 	w_p_a	= w_l(1);
 	w_s_a 	= w_l(3);
 	w_z_a	= w_l(4);
 
-	if exist('SPLINES')
+	if (flaggo == 0)
 		M_a			= ppval(SPLINES(1), eta_l);
 		Psibar_a	= ppval(SPLINES(4), eta_l);
 		M_b			= ppval(SPLINES(1), eta_r);
 		Psibar_b	= ppval(SPLINES(4), eta_r);
+	elseif (flaggo == 1)
+		[M_a] = MFromEtaLVG(eta_l, SPLINES);
+		[Psibar_a] = BaseFlowFromMLVG(M_a);
+		[M_b] = MFromEtaLVG(eta_r, SPLINES);
+		[Psibar_b] = BaseFlowFromMLVG(M_b);
 	else
 		error('Add MfromA stuff here');	
 	end
-
 
 %	Pre-compute for convenience
 	gm1 = gamma - 1;

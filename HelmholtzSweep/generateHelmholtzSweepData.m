@@ -31,9 +31,9 @@ function[OMEGA TRANS PHASE] = validateDuranMoreau(forcing)
 			count = count + 1;
 			OMEGA(count) = omega;
 			if ((exist('subsol', 'var')) && (exist('supsol', 'var')))
-				[transfer, subsol, supsol, ~, SPLINES] 	= DuranMoreau(M_a, M_b, M_c, omega, forcing, 1, true, 0, SPLINES, subsol, supsol);
+				[transfer, subsol, supsol, ~, SPLINES] 	= DuranMoreau(M_a, M_b, M_c, omega, forcing, 1, true, 1, SPLINES, subsol, supsol);
 			else
-				[transfer, subsol, supsol, ~, SPLINES] 	= DuranMoreau(M_a, M_b, M_c, omega, forcing, 1, true, 0);
+				[transfer, subsol, supsol, ~, SPLINES] 	= DuranMoreau(M_a, M_b, M_c, omega, forcing, 1, true, 1);
 			end
 			TRANS(test,count,:) = [transfer(1,2), transfer(2,2), transfer(3,2), transfer(4,2), transfer(2,1)];
 			PHASE(test, count, :) = [	atan2(imag(transfer(1,2)), real(transfer(1,2))), ...

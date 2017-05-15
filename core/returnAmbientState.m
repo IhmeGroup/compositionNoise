@@ -30,4 +30,5 @@ function[gamma, T0, p0, Zbar] = returnAmbientState()
 		error('mechanism not defined');
 	end
 	[gamma] = returnGamma(T0, p0, Zbar);
+	gamma = 1.4;
 end

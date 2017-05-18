@@ -17,6 +17,10 @@ function[d_I_d_eta] = DuranMoreauODE(eta, I, Omega, flaggo, SPLINES)
 		M				= MFromEtaLVG(eta, SPLINES);
 		M2				= M*M;
 		[Psibar, ubar] 	= BaseFlowFromMLVG(M);
+	elseif (flaggo == 2)
+		M				= MFromEtaDMSC(eta, SPLINES);
+		M2				= M*M;
+		[Psibar, ubar] 	= BaseFlowFromMDMSC(eta, M);
 	else
 		error('Add MfromA stuff here');	
 	end

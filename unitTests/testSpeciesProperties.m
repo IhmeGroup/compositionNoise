@@ -22,7 +22,7 @@ function[] = testSpeciesProperties(mechanism)
 		Y = zeros(Nspecies,1);
 		Y(i) = 1;
 		for j = 1:N
-			[cp(j), h(j), s(j), g(j)] = returnSpeciesProperties(T(j), 1E5, Y, a, A, MW);
+			[cp(j), h(j), s(j), g(j)] = returnSpeciesProperties(T(j), 1E5, Y, a, A, MW, Hover);
 		end
 		figure(b);
 		subplot(2,2,1);

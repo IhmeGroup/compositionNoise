@@ -16,6 +16,7 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 %		mechanism == 3 --> H2 (Hydrogen)
 %		mechanism == 4 --> Inerts
 %		mechanism == 5 --> MW
+%		mechanism == 6 --> Psi checks with Jeonglae
 %	7) suppress = a flag to suppress generation of figures showing the spatial evolution of the system, set to true when sweeping, false when plotting a single instance/debugging
 %	8) flaggo is a way to switch between a splined background flow and a locally computed background flow
 %		flaggo == 0 --> standard spline (good for shock-free applications with linear velocity gradient geometry)
@@ -49,8 +50,10 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 	addpath('../speciesProps');
 
 	Omega
+	global omga;
+	omga = Omega;
 %	Solver parameters - hard-coding some stuff so that the inputs don't get (more) verbose
-	epsilon = 1E-4;%This is the value of the perturbation distance (in eta) about the nozzle throat. Small values lead toward more accuracte (but more oscillatory and solower solutions)
+	epsilon = 1E-3;%This is the value of the perturbation distance (in eta) about the nozzle throat. Small values lead toward more accuracte (but more oscillatory and solower solutions)
 	N1 = 401;
 	N2 = 401;
 	N3 = 401;
@@ -135,6 +138,8 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 %				Locally based computation - this is an ugly variable container					
 				disp('Local base flow computation');
 				SPLINES = [M_a, M_b, M_c];
+		elseif (flaggo == 2)
+				error('Duran Moreau shocked case is not subsonic');
 		else
 			error('Shoulda written more code');
 		end
@@ -177,10 +182,14 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 %				Fresh start for splined linear velocity gradient				
 				disp('Splined base flow computation');
 				SPLINES = buildBaseFlowSplines(M_a, M_b, Nsplines);
-			else
+			elseif (flaggo == 1)
 %				Locally based computation - this is an ugly variable container					
 				disp('Local base flow computation');
 				SPLINES = [M_a, M_b, M_c];
+			elseif (flaggo == 2)
+				error('Duran Moreau shocked case is not subsonic');
+			else
+				error('Shoulda written more code');
 			end
 		end
 
@@ -230,6 +239,8 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 %				Locally based computation - this is an ugly variable container					
 				disp('Local base flow computation');
 				SPLINES = [M_a, M_b, M_c];
+			elseif (flaggo == 2)
+				error('Duran Moreau shocked case is not just choked');
 			else
 				error('Need to address other flaggo cases here');
 			end
@@ -318,6 +329,13 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 			x_2		= L_1/L
 			etabounds = [0, x_1-epsilon]
 			SPLINES = [M_a M_b M_c]
+		elseif (flaggo == 2)
+%			Duran Moreau Shock case
+			x_1 	= 0.2489;
+			x_2 	= 0.5008;
+			etabounds = [0, x_1 - epsilon];
+			SPLINES = [M_a M_b M_c];
+
 		else
 			error('Need to address other flaggo cases here');
 		end
@@ -344,7 +362,8 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%	
 %		Do something about the BCs
 		I_end 	= subsol.y(:,end);
-		[w_l] = charsFromInvrnts(eta(end), I_end, flaggo, SPLINES);
+		disp('passing into shocked case')
+		[w_l] = charsFromInvrnts(eta(end), I_end, flaggo, SPLINES)
 		w_r		= [NaN; NaN; NaN; NaN];
 
 %		Compute the eta bounds (see appendix of Duran & Moreau) for the supersonic problem
@@ -352,6 +371,8 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 			error('The splined approach is inappropriate for discontinuous base flows');
 		elseif  (flaggo == 1)
 			etabounds = [x_1+epsilon, x_2-epsilon]
+		elseif (flaggo == 2)
+			etabounds = [x_1+epsilon, x_2 - epsilon];
 		else
 			error('Need to address other flaggo cases here');
 		end
@@ -384,13 +405,15 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 		if (flaggo == 0) 
 			error('The splined approach is inappropriate for discontinuous base flows');
 		elseif(flaggo == 1)
-			etabounds = [x_2+epsilon, 1]
+			etabounds = [x_2+epsilon, 1];
+		elseif (flaggo == 2)
+			etabounds = [x_2 + epsilon, 1];
 		else
 			error('Need to address other flaggo cases here');
 		end
 
 		ODECaller = @(eta, I) DuranMoreauODE(eta, I, Omega, flaggo, SPLINES);
-		BCCaller = @(I_a, I_r) ShockedBCs(I_a, I_r, w_l, w_r, etabounds(1), etabounds(2), flaggo, SPLINES);
+		BCCaller = @(I_a, I_r) DMShockedBCs(I_a, I_r, w_l, w_r, etabounds(1), etabounds(2), flaggo, SPLINES);
 
 %		Initialize
 		if (~exist('shksol', 'var'))
@@ -416,6 +439,9 @@ function[transfer, subsol, supsol, shksol, SPLINES] = DuranMoreau(M_a, M_b, M_c,
 		elseif (flaggo == 1)
 			EM(i)	= MFromEtaLVG(eta(i), SPLINES);
 			psi(i)	= BaseFlowFromMLVG(EM(i));
+		elseif (flaggo == 2)
+			EM(i)	= MFromEtaDMSC(eta(i), SPLINES);
+			psi(i)	= BaseFlowFromMDMSC(eta(i), EM(i));
 		else
 			error('You should really address this MfromA stuff');
 		end

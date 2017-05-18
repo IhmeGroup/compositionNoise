@@ -1,6 +1,7 @@
 function[gammactr] = returnGamma(Tbar, pbar, Zbar)
 %	Returns the normalized chemical potential and (gibbs free energy, if desired) as a function of mean temperature, pressure, and composition
 	global data mechanism a A MW Hover;
+		disp('buzz');
 
 %	compute the size of the flamelet stored in data
 	if ((mechanism <= 3) || (mechanism == 5))

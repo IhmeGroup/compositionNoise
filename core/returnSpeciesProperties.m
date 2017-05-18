@@ -1,4 +1,5 @@
-function[cp, h, s, g, h0, gamma] = returnSpeciesProperties(T, p, Y, a, A, MW, Hover)
+function[cp, h, s, g, h0, gamma, aleph] = returnSpeciesProperties(T, p, Y, a, A, MW, Hover)
+%		 1   2  3  4  5   6
 %	This is a function that emulates CHEMKIN, returning species properties as a function of thermodynamic state, composition, NASA polynomials (a and A) and molecular weight (MW)
 	R_univ = 8.31446;
 	T2 = power(T,2);
@@ -41,4 +42,6 @@ function[cp, h, s, g, h0, gamma] = returnSpeciesProperties(T, p, Y, a, A, MW, Ho
 	g = h - T*s;
 	h0 = dot(Y,Hover./MW.*R_univ);
 	gamma = cp/(cp - R_univ/MW_bar);	
+	alpeh = 0;
+	phibar = 0;
 end%returnSpeciesProperties()

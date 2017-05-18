@@ -21,6 +21,8 @@ function[] = loadSpeciesData()
 	elseif (mechanism == 5)%ICSV
 		data = load('../data/lowStrain/lowStrain.CH4');
 		[Nspecies, species, a, A, MW, Hover] = speciesPropsMW();
+	elseif(mechanism == 6)
+		[Nspecies, species, a, A, MW, Hover] = speciesPropsJeonglaeCheck();
 	else
 		error(strcat('Undefined mechanism type = ', num2str(mechanism)));
 	end

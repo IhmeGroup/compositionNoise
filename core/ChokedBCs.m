@@ -13,10 +13,15 @@ function[Res] = ChokedBCs(I_a, I_b, w_l, w_r, eta_l, eta_r, flaggo, SPLINES)
 		M_b			= ppval(SPLINES(1), eta_r);
 		Psibar_b	= ppval(SPLINES(4), eta_r);
 	elseif (flaggo == 1)
-		[M_a] = MFromEtaLVG(eta_l, SPLINES);
-		[Psibar_a] = BaseFlowFromMLVG(M_a);
-		[M_b] = MFromEtaLVG(eta_r, SPLINES);
-		[Psibar_b] = BaseFlowFromMLVG(M_b);
+		[M_a] 		= MFromEtaLVG(eta_l, SPLINES);
+		[Psibar_a] 	= BaseFlowFromMLVG(M_a);
+		[M_b] 		= MFromEtaLVG(eta_r, SPLINES);
+		[Psibar_b] 	= BaseFlowFromMLVG(M_b);
+	elseif (flaggo == 2)
+		[M_a]		= MFromEtaDMSC(eta_l, SPLINES);
+		[Psibar_a]	= BaseFlowFromMDMSC(eta_l, M_a);
+		[M_b] 		= MFromEtaDMSC(eta_r, SPLINES);
+		[Psibar_b] 	= BaseFlowFromMDMSC(eta_r, M_b);
 	else
 		error('Add MfromA stuff here');	
 	end

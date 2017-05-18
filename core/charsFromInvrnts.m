@@ -7,8 +7,12 @@ function[w, s] = charsFromInvrnts(eta, I, flaggo,SPLINES)
 	elseif (flaggo == 1)
 		M			= MFromEtaLVG(eta, SPLINES);
 		[Psibar] 	= BaseFlowFromMLVG(eta);
+	elseif (flaggo == 2)
+		eta
+		M			= MFromEtaDMSC(eta, SPLINES)
+		[Psibar]	= BaseFlowFromMDMSC(eta, M);
 	else
-		error('Add MfromA stuff here');	
+		error('Should have written more code');
 	end
 
 %	Pre-compute for convenience
